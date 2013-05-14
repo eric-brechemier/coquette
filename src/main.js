@@ -1,4 +1,4 @@
-within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
+var Coquette = within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
   var Coquette = function(game, canvasId, width, height, backgroundColor, autoFocus) {
     var
       Renderer = get("Renderer"),
@@ -15,6 +15,7 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     set("backgroundColor", backgroundColor);
     set("autoFocus", autoFocus);
 
+    set("coquette", this);
     set("renderer", new Renderer(canvasId, width, height, backgroundColor));
     set("inputter", new Inputter(canvasId, autoFocus));
     set("updater", new Updater());
@@ -22,10 +23,18 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     set("runner", new Runner());
     set("collider", new Collider());
 
-    get("updater").add(this.collider);
-    get("updater").add(this.runner);
-    get("updater").add(this.renderer);
-    get("updater").add(game);
+    // Public API
+    this.renderer = get("renderer");
+    this.inputter = get("inputter");
+    this.updater = get("updater");
+    this.entities = get("entities");
+    this.runner = get("runner");
+    this.collider = get("collider");
+    this.updater.add(this.collider);
+    this.updater.add(this.runner);
+    this.updater.add(this.renderer);
+    this.updater.add(game);
+    this.game = get("game");
   };
 
   Coquette.get = function() {
@@ -33,4 +42,7 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
   };
 
   set("Coquette", Coquette);
+
+  // Public API in the browser
+  return Coquette;
 });
