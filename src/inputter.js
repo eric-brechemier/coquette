@@ -1,4 +1,4 @@
- ;(function(exports) {
+within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
   var Inputter = function(canvasId, autoFocus) {
     if (autoFocus === undefined) {
       autoFocus = true;
@@ -48,5 +48,6 @@
     DOWN_ARROW: 40,
     SPACE: 32
   };
-  exports.Inputter = Inputter;
-})(typeof exports === 'undefined' ? this.Coquette : exports);
+
+  set("Inputter", Inputter);
+});

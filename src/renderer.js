@@ -1,4 +1,4 @@
-;(function(exports) {
+within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
   var Renderer = function(canvasId, width, height, backgroundColor) {
     var canvas = document.getElementById(canvasId);
     canvas.style.outline = "none"; // stop browser outlining canvas when it has focus
@@ -27,10 +27,10 @@
     },
 
     onScreen: function(obj) {
-      return obj.pos.x > 0 && obj.pos.x < Coquette.get().renderer.width &&
-        obj.pos.y > 0 && obj.pos.y < Coquette.get().renderer.height;
+      return obj.pos.x > 0 && obj.pos.x < get("renderer").width &&
+        obj.pos.y > 0 && obj.pos.y < get("renderer").height;
     }
   };
 
-  exports.Renderer = Renderer;
-})(typeof exports === 'undefined' ? this.Coquette : exports);
+  set("Renderer", Renderer);
+});

@@ -1,24 +1,36 @@
-;(function(exports) {
+within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
   var Coquette = function(game, canvasId, width, height, backgroundColor, autoFocus) {
-    coquette = this;
-    this.renderer = new Coquette.Renderer(canvasId, width, height, backgroundColor);
-    this.inputter = new Coquette.Inputter(canvasId, autoFocus);
-    this.updater = new Coquette.Updater();
-    this.entities = new Coquette.Entities();
-    this.runner = new Coquette.Runner();
-    this.collider = new Coquette.Collider();
+    var
+      Renderer = get("Renderer"),
+      Inputter = get("Inputter"),
+      Updater = get("Updater"),
+      Entities = get("Entities"),
+      Runner = get("Runner"),
+      Collider = get("Collider");
+
+    set("game", game);
+    set("canvasId", canvasId);
+    set("width", width);
+    set("height", height);
+    set("backgroundColor", backgroundColor);
+    set("autoFocus", autoFocus);
+
+    set("renderer", new Renderer(canvasId, width, height, backgroundColor));
+    set("inputter", new Inputter(canvasId, autoFocus));
+    set("updater", new Updater());
+    set("entities", new Entities());
+    set("runner", new Runner());
+    set("collider", new Collider());
 
     this.updater.add(this.collider);
     this.updater.add(this.runner);
     this.updater.add(this.renderer);
     this.updater.add(game);
-    this.game = game;
   };
 
-  var coquette;
   Coquette.get = function() {
-    return coquette;
+    return get("coquette");
   };
 
-  exports.Coquette = Coquette;
-})(this);
+  set("Coquette", Coquette);
+});

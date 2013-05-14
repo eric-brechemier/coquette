@@ -1,5 +1,11 @@
-var Collider = require('../src/collider').Collider;
-var Maths = Collider.Maths;
+require("../src/within");
+require('../src/collider');
+
+var Collider, Maths;
+within("coquette.maryrosecook.com", function(get) {
+  Collider = get("Collider");
+  Maths = Collider.Maths;
+});
 
 var mockObj = function(posX, posY, sizeX, sizeY, boundingBox) {
   return {

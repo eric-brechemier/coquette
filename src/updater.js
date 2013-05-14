@@ -1,4 +1,4 @@
-;(function(exports) {
+within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
   var interval = 16;
 
   function Updater() {
@@ -77,5 +77,5 @@
     }
   };
 
-  exports.Updater = Updater;
-})(typeof exports === 'undefined' ? this.Coquette : exports);
+  set("Updater", Updater);
+});
