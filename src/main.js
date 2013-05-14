@@ -22,10 +22,10 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     set("runner", new Runner());
     set("collider", new Collider());
 
-    this.updater.add(this.collider);
-    this.updater.add(this.runner);
-    this.updater.add(this.renderer);
-    this.updater.add(game);
+    get("updater").add(this.collider);
+    get("updater").add(this.runner);
+    get("updater").add(this.renderer);
+    get("updater").add(game);
   };
 
   Coquette.get = function() {
