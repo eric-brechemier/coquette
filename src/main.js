@@ -1,4 +1,12 @@
 var Coquette = within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
+
+  // set default values of options
+  set("canvasId", "canvas");
+  set("width", 600);
+  set("height", 600);
+  set("backgroundColor", "#000");
+  set("autoFocus", true);
+
   var Coquette = function(game, canvasId, width, height, backgroundColor, autoFocus) {
     var
       Renderer = get("Renderer"),
