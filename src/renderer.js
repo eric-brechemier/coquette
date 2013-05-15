@@ -1,6 +1,12 @@
 within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
-  var Renderer = function(canvasId, width, height, backgroundColor) {
-    var canvas = document.getElementById(canvasId);
+  var Renderer = function() {
+    var
+      canvasId = get("canvasId"),
+      width = get("width"),
+      height = get("height"),
+      backgroundColor = get("backgroundColor"),
+      canvas = document.getElementById(canvasId);
+
     canvas.style.outline = "none"; // stop browser outlining canvas when it has focus
     canvas.style.cursor = "default"; // keep pointer normal when hovering over canvas
     this.ctx = canvas.getContext('2d');
