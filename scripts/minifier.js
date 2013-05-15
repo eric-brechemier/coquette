@@ -5,10 +5,10 @@ var packer = require( 'node.packer' ),
 
 var input = [
   path + 'within.js',
+  path + 'updater.js',
   path + 'collider.js',
   path + 'inputter.js',
   path + 'runner.js',
-  path + 'updater.js',
   path + 'renderer.js',
   path + 'entities.js',
   path + 'main.js'
