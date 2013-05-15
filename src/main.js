@@ -7,6 +7,14 @@ var Coquette = within("coquette.maryrosecook.com", function(get, set, publish, s
   set("backgroundColor", "#000");
   set("autoFocus", true);
 
+  /*
+    Check whether given value is null or undefined
+  */
+  function no( value ) {
+    var undef; // do not trust global undefined, which can be set to a value
+    return value === null || value === undef;
+  }
+
   var Coquette = function(game, canvasId, width, height, backgroundColor, autoFocus) {
     var
       Renderer = get("Renderer"),
@@ -21,7 +29,9 @@ var Coquette = within("coquette.maryrosecook.com", function(get, set, publish, s
     set("width", width);
     set("height", height);
     set("backgroundColor", backgroundColor);
-    set("autoFocus", autoFocus);
+    if ( !no(autoFocus) ) {
+      set("autoFocus", autoFocus);
+    }
 
     set("coquette", this);
     set("renderer", new Renderer(canvasId, width, height, backgroundColor));
