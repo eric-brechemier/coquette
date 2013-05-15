@@ -1,8 +1,8 @@
 within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
-  var Inputter = function(canvasId, autoFocus) {
-    if (autoFocus === undefined) {
-      autoFocus = true;
-    }
+  var Inputter = function() {
+    var
+      canvasId = get("canvasId"),
+      autoFocus = get("autoFocus");
 
     var inputReceiverElement = window;
     if (!autoFocus) {

@@ -35,7 +35,7 @@ var Coquette = within("coquette.maryrosecook.com", function(get, set, publish, s
 
     set("coquette", this);
     set("renderer", new Renderer(canvasId, width, height, backgroundColor));
-    set("inputter", new Inputter(canvasId, autoFocus));
+    set("inputter", new Inputter());
     set("updater", new Updater());
     set("entities", new Entities());
     set("runner", new Runner());
