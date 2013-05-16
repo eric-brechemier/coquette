@@ -1,5 +1,5 @@
 within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
-  var Collider = function() {};
+  function Collider() {}
 
   Collider.prototype = {
     collideRecords: [],
@@ -217,4 +217,12 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
 
   Collider.Maths = Maths;
   set("Collider", Collider);
+
+  subscribe("start", function() {
+    set("collider", new Collider());
+  });
+
+  subscribe("started", function() {
+    get("updater").add( get("collider") );
+  });
 });

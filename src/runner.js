@@ -1,7 +1,7 @@
 within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
   function Runner() {
     this.runs = [];
-  };
+  }
 
   Runner.prototype = {
     update: function() {
@@ -24,4 +24,13 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
   };
 
   set("Runner", Runner);
+
+  subscribe("start", function() {
+    set("runner", new Runner());
+  });
+
+  subscribe("started", function() {
+    get("updater").add( get("runner") );
+  });
+
 });

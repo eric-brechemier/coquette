@@ -1,5 +1,5 @@
 within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
-  var Renderer = function() {
+  function Renderer() {
     var
       canvasId = get("canvasId"),
       width = get("width"),
@@ -13,7 +13,7 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     this.backgroundColor = backgroundColor;
     canvas.width = this.width = width;
     canvas.height = this.height = height;
-  };
+  }
 
   Renderer.prototype = {
     getCtx: function() {
@@ -39,4 +39,12 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
   };
 
   set("Renderer", Renderer);
+
+  subscribe("start", function() {
+    set("renderer", new Renderer());
+  });
+
+  subscribe("started", function() {
+    get("updater").add( get("renderer") );
+  });
 });

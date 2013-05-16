@@ -1,5 +1,5 @@
 within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
-  var Inputter = function() {
+  function Inputter() {
     var
       canvasId = get("canvasId"),
       autoFocus = get("autoFocus");
@@ -20,7 +20,7 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
 
     inputReceiverElement.addEventListener('keydown', this.keydown.bind(this), false);
     inputReceiverElement.addEventListener('keyup', this.keyup.bind(this), false);
-  };
+  }
 
   Inputter.prototype = {
     _state: {},
@@ -50,4 +50,7 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
   };
 
   set("Inputter", Inputter);
+  subscribe("start", function() {
+    set("inputter", new Inputter());
+  });
 });

@@ -78,4 +78,8 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
   };
 
   set("Updater", Updater);
+
+  subscribe("start", function() {
+    set("updater", new Updater());
+  });
 });

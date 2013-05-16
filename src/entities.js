@@ -1,7 +1,7 @@
 within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
   function Entities() {
     this._entities = [];
-  };
+  }
 
   Entities.prototype = {
     all: function(clazz) {
@@ -49,4 +49,8 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
   };
 
   set("Entities", Entities);
+
+  subscribe("start", function() {
+    set("entities", new Entities());
+  });
 });
