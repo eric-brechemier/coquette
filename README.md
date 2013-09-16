@@ -12,7 +12,10 @@ http://coquette.maryrosecook.com
 
 ## Get the code
 
-    $ git clone git://github.com/maryrosecook/coquette.git
+* Minified: https://github.com/maryrosecook/coquette/coquette-min.js
+* Single file: https://github.com/maryrosecook/coquette/coquette.js
+* GitHub: https://github.com/maryrosecook/coquette
+* `$ npm install coquette`
 
 ## Example
 
@@ -35,12 +38,12 @@ The game code:
 
 ```javascript
 var Game = function(canvasId, width, height) {
-  this.coq = new Coquette(this, canvasId, width, height, "#000");
+  var coq = new Coquette(this, canvasId, width, height, "#000");
 
-  this.coq.entities.create(Person, { pos:{ x:68, y:40 }, color:"#0f0" }); // paramour
-  this.coq.entities.create(Person, { pos:{ x:74, y:110 }, color:"#f00", // player
+  coq.entities.create(Person, { pos:{ x:243, y:40 }, color:"#099" }); // paramour
+  coq.entities.create(Person, { pos:{ x:249, y:110 }, color:"#f07", // player
     update: function() {
-      if (this.game.coq.inputter.state(this.game.coq.inputter.UP_ARROW)) {
+      if (coq.inputter.down(coq.inputter.UP_ARROW)) {
         this.pos.y -= 0.4;
       }
     },
@@ -50,32 +53,21 @@ var Game = function(canvasId, width, height) {
   });
 };
 
-var Person = function(game, settings) {
-  this.game = game;
+var Person = function(_, settings) {
   for (var i in settings) {
     this[i] = settings[i];
   }
   this.size = { x:9, y:9 };
-  this.draw = function() {
-    game.coq.renderer.getCtx().fillStyle = settings.color;
-    game.coq.renderer.getCtx().fillRect(this.pos.x, this.pos.y, this.size.x, this.size.y);
+  this.draw = function(ctx) {
+    ctx.fillStyle = settings.color;
+    ctx.fillRect(this.pos.x, this.pos.y, this.size.x, this.size.y);
   };
 };
 
 window.addEventListener('load', function() {
-  new Game("canvas", 150, 150);
+  new Game("canvas", 500, 150);
 });
 ```
-
-## Run the tests
-
-Install Node.js and npm: https://github.com/isaacs/npm
-
-Install the node dependencies and run the tests with:
-
-    $ cd path/to/coquette
-    $ npm install --dev
-    $ npm test
 
 ## Reference
 
@@ -101,32 +93,63 @@ When you instantiate Coquette, you get an object that has five modules. You can 
 
 Handles keyboard input from the player.
 
-##### Find out if a certain key is pressed
+##### Find out if a certain key is down
 
-Call `coquette.inputter.state()`, passing in the key's code, e.g.:
+Call `coquette.inputter.down()`, passing in the key's code, e.g.:
 
 ```javascript
-var pressed = coquette.inputter.state(coquette.inputter.LEFT_ARROW);
+var down = coquette.inputter.down(coquette.inputter.LEFT_ARROW);
 ```
 
-#### Updater
+##### Find out if a certain key was pressed down and then released
 
-Calls `update()` and `draw()` on every object added to it.
+Call `coquette.inputter.pressed()`, passing in the key's code, e.g.:
 
-Objects are added to the `Updater` module.  Each tick - each sixtieth of a second or so - the module calls the `update()` function, if it exists, on each object, then calls the `draw()` function, if it exists, on each object.
+```javascript
+var pressed = coquette.inputter.pressed(coquette.inputter.LEFT_ARROW);
+```
 
-The main game object is automatically added to the `Updater` module.  Its `update()` and `draw()` functions are called before any other entity's.
+#### Ticker
 
-Any object created with the `Entities` module is automatically added to the `Updater` module.
+Does a tick - an iteration of the game update loop - sixty times a second.  If the main game object or a game entity has an `update()` function, it will get called on each tick.  If the main game object or a game entity has a `draw()` function, it will get called on each tick.
 
 #### Renderer
+
+Holds the canvas drawing context.  Calls `draw()` on the main game object and all game entities.
 
 ##### Get the canvas drawing context
 
 ```javascript
-var ctx = coquette.renderer.getCtx();
-ctx.fillStyle = "#f00";
-ctx.fillRect(0, 0, 10, 10);
+  var ctx = coquette.renderer.getCtx();
+  ctx.fillStyle = "#f00";
+  ctx.fillRect(0, 0, 10, 10);
+```
+
+##### Set the order that entities are drawn
+
+When you create your entities, include some integer `zindex` attribute in the `settings` object.  An entity with a higher `zindex` will get drawn on top of an entity with a lower `zindex`.  The default `zindex` is `0`.
+
+```javascript
+  coquette.entities.create(BackgroundTile, { zindex: -1 });
+  coquette.entities.create(Player, { zindex: 1 }); // drawn on top
+```
+
+##### Move the view
+
+You can use `coquette.renderer.setViewCenterPos()` to move the position of the view around the world.  For example, to make the view follow a specific object, you could call `setViewCenterPos(specificObj.pos)` in the `update()` function of your game:
+
+```javascript
+  var Game = function() {
+    var coquette = new Coquette(this, "canvas", 500, 500, "#000");
+    var specialObject;
+    coquette.entities.create(SpecialObject, {}, function(obj) {
+      specialObject = obj;
+    });
+
+    this.update = function() {
+      coquette.renderer.setViewCenterPos(specialObject.pos);
+    };
+  };
 ```
 
 #### Entities
@@ -134,10 +157,6 @@ ctx.fillRect(0, 0, 10, 10);
 Keeps track of all game entities: the player, enemies.
 
 ##### Create an entity
-
-When you create an entity with the `Entities` module, the entity will not actually get created until the next tick.  This avoids logical and collision detection problems that arise from creating an entity mid-tick.
-
-When you create an entity, it is automatically added to the `Updater` module.
 
 Call `coquette.entities.create()` with:
 
@@ -159,11 +178,9 @@ coquette.entities.create(Bubble, {
 });
 ```
 
+When you create an entity with the `Entities` module, the entity will not actually get created until the next tick.  This avoids logical and collision detection problems that arise from creating an entity mid-tick.
+
 ##### Destroy an entity
-
-When you destroy an entity, it will not actually get destroyed until the next tick.  This avoids logical and collision detection problems that arise from destroying an entity mid-tick.
-
-When you destroy an entity, it is automatically removed from the `Updater` module.
 
 Call `coquette.entities.destroy()` with:
 
@@ -175,6 +192,8 @@ coquette.entities.destroy(bubble, function() {
   console.log("boom");
 });
 ```
+
+When you destroy an entity, it will not actually get destroyed until the next tick.  This avoids logical and collision detection problems that arise from destroying an entity mid-tick.
 
 ##### Get all the entities in the game
 
@@ -196,7 +215,7 @@ Reports when two entities collide.
 
 To make an entity support collisions, put these attributes on it:
 
-* `pos`: the top left position of the entity, e.g.: `{ x: 10, y: 20 }`.
+* `pos`: the top left corner of the entity, e.g.: `{ x: 10, y: 20 }`.
 * `size`: the size of the entity, e.g.: `{ x: 50, y: 30 }`.
 * `boundingBox`: the shape that best approximates the shape of the entity, either `coquette.collider.RECTANGLE` or `coquette.collider.CIRCLE`.
 
@@ -226,3 +245,13 @@ var Player = function() {
   };
 };
 ```
+
+## Run the tests
+
+Install Node.js and npm: https://github.com/isaacs/npm
+
+Install the node dependencies and run the tests with:
+
+    $ cd path/to/coquette
+    $ npm install --dev
+    $ npm test

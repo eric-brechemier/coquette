@@ -1,16 +1,27 @@
-within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
-  function Entities() {
+;(function(exports) {
+  function Entities(coquette, game) {
+    this.coquette = coquette;
+    this.game = game;
     this._entities = [];
-  }
+  };
 
   Entities.prototype = {
-    all: function(clazz) {
-      if (clazz === undefined) {
+    update: function(interval) {
+      var entities = this.all();
+      for (var i = 0, len = entities.length; i < len; i++) {
+        if (entities[i].update !== undefined) {
+          entities[i].update(interval);
+        }
+      }
+    },
+
+    all: function(Constructor) {
+      if (Constructor === undefined) {
         return this._entities;
       } else {
         var entities = [];
         for (var i = 0; i < this._entities.length; i++) {
-          if (this._entities[i] instanceof clazz) {
+          if (this._entities[i] instanceof Constructor) {
             entities.push(this._entities[i]);
           }
         }
@@ -20,9 +31,9 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     },
 
     create: function(clazz, settings, callback) {
-      get("runner").add(this, function(entities) {
-        var entity = new clazz(get("game"), settings || {});
-        get("updater").add(entity);
+      var self = this;
+      this.coquette.runner.add(this, function(entities) {
+        var entity = new clazz(self.game, settings || {});
         entities._entities.push(entity);
         if (callback !== undefined) {
           callback(entity);
@@ -31,12 +42,11 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     },
 
     destroy: function(entity, callback) {
-      get("runner").add(this, function(entities) {
-        get("updater").remove(entity);
-        entity._killed = true;
-        get("updater").remove(entity);
+      var self = this;
+      this.coquette.runner.add(this, function(entities) {
         for(var i = 0; i < entities._entities.length; i++) {
           if(entities._entities[i] === entity) {
+            self.coquette.collider.destroyEntity(entity);
             entities._entities.splice(i, 1);
             if (callback !== undefined) {
               callback();
@@ -48,9 +58,5 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     }
   };
 
-  set("Entities", Entities);
-
-  subscribe("start", function() {
-    set("entities", new Entities());
-  });
-});
+  exports.Entities = Entities;
+})(typeof exports === 'undefined' ? this.Coquette : exports);

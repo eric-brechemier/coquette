@@ -6,31 +6,28 @@
   };
 
   Bullet.prototype = {
-	  size: { x:1, y:1 },
+    size: { x:1, y:1 },
     speed: 1000,
-    zIndex: 1,
 
-    update: function() {
+    update: function(tick) {
       if (this.game.state !== this.game.STATE.PLAYING) return;
 
-		  var mx = this.vel.x * this.game.coquette.updater.tick;
-		  var my = this.vel.y * this.game.coquette.updater.tick;
+      var mx = this.vel.x * tick;
+      var my = this.vel.y * tick;
       this.pos.x += mx;
       this.pos.y += my;
 
       if (!this.game.coquette.renderer.onScreen(this)) {
         this.kill();
       }
-
-      this.draw();
     },
 
-    draw: function() {
+    draw: function(ctx) {
       if (this.game.state !== this.game.STATE.PLAYING) return;
 
-      this.game.startClip();
+      this.game.startClip(ctx);
       this.game.circle(this.pos, this.size.x / 2, "#fff");
-      this.game.endClip();
+      this.game.endClip(ctx);
     },
 
     collision: function(other) {

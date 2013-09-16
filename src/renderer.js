@@ -1,50 +1,93 @@
-within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
-  function Renderer() {
-    var
-      canvasId = get("canvasId"),
-      width = get("width"),
-      height = get("height"),
-      backgroundColor = get("backgroundColor"),
-      canvas = document.getElementById(canvasId);
+;(function(exports) {
+  var Maths;
+  if(typeof module !== 'undefined' && module.exports) { // node
+    Maths = require('./collider').Collider.Maths;
+  } else { // browser
+    Maths = Coquette.Collider.Maths;
+  }
 
+  var Renderer = function(coquette, game, canvas, wView, hView, backgroundColor) {
+    this.coquette = coquette;
+    this.game = game;
     canvas.style.outline = "none"; // stop browser outlining canvas when it has focus
     canvas.style.cursor = "default"; // keep pointer normal when hovering over canvas
     this.ctx = canvas.getContext('2d');
     this.backgroundColor = backgroundColor;
-    canvas.width = this.width = width;
-    canvas.height = this.height = height;
-  }
+
+    canvas.width = wView;
+    canvas.height = hView;
+    this.viewSize = { x:wView, y:hView };
+    this.viewCenterPos = { x: this.viewSize.x / 2, y: this.viewSize.y / 2 };
+  };
 
   Renderer.prototype = {
     getCtx: function() {
       return this.ctx;
     },
 
-    update: function() {
-      this.ctx.fillStyle = this.backgroundColor;
-      this.ctx.fillRect(0, 0, this.width, this.height);
+    getViewSize: function() {
+      return this.viewSize;
     },
 
-    center: function() {
-      return {
-        x: this.width / 2,
-        y: this.height / 2
-      };
+    getViewCenterPos: function() {
+      return this.viewCenterPos;
+    },
+
+    setViewCenterPos: function(pos) {
+      this.viewCenterPos = { x:pos.x, y:pos.y };
+    },
+
+    update: function(interval) {
+      var ctx = this.getCtx();
+
+      var viewTranslate = viewOffset(this.viewCenterPos, this.viewSize);
+
+      // translate so all objs placed relative to viewport
+      ctx.translate(-viewTranslate.x, -viewTranslate.y);
+
+      // draw background
+      ctx.fillStyle = this.backgroundColor;
+      ctx.fillRect(this.viewCenterPos.x - this.viewSize.x / 2,
+                   this.viewCenterPos.y - this.viewSize.y / 2,
+                   this.viewSize.x,
+                   this.viewSize.y);
+
+      // draw game and entities
+      var drawables = [this.game]
+        .concat(this.coquette.entities.all().concat().sort(zindexSort));
+      for (var i = 0, len = drawables.length; i < len; i++) {
+        if (drawables[i].draw !== undefined) {
+          drawables[i].draw(ctx);
+        }
+      }
+
+      // translate back
+      ctx.translate(viewTranslate.x, viewTranslate.y);
     },
 
     onScreen: function(obj) {
-      return obj.pos.x > 0 && obj.pos.x < get("renderer").width &&
-        obj.pos.y > 0 && obj.pos.y < get("renderer").height;
+      return Maths.rectanglesIntersecting(obj, {
+        size: this.viewSize,
+        pos: {
+          x: this.viewCenterPos.x - this.viewSize.x / 2,
+          y: this.viewCenterPos.y - this.viewSize.y / 2
+        }
+      });
     }
   };
 
-  set("Renderer", Renderer);
+  var viewOffset = function(viewCenterPos, viewSize) {
+    return {
+      x:viewCenterPos.x - viewSize.x / 2,
+      y:viewCenterPos.y - viewSize.y / 2
+    }
+  };
 
-  subscribe("start", function() {
-    set("renderer", new Renderer());
-  });
+  // sorts passed array by zindex
+  // elements with a higher zindex are drawn on top of those with a lower zindex
+  var zindexSort = function(a, b) {
+    return (a.zindex || 0) < (b.zindex || 0) ? -1 : 1;
+  };
 
-  subscribe("started", function() {
-    get("updater").add( get("renderer") );
-  });
-});
+  exports.Renderer = Renderer;
+})(typeof exports === 'undefined' ? this.Coquette : exports);

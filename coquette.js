@@ -1,328 +1,152 @@
-// https://github.com/eric-brechemier/within (License: CC0)
-// within is a factory of semi-private spaces
-// where properties and events can be shared.
-// Usage: within("your.domain", function(get, set, publish, subscribe){ ... });
-
-// from sub/nada/privately.js (CC0)
-function privately( func ) {
-  return func();
-}
-
-privately(function() {
-  var
-    dataSpaces = {},
-    eventSpaces = {},
-    has;
-
-  // from sub/nada/copy.js (CC0)
-  function copy( array ) {
-    return [].concat( array );
-  }
-
-  // from sub/nada/remove.js (CC0)
-  function remove( array, value ) {
-    var i;
-    for ( i = array.length; i >= 0; i-- ) {
-      if ( array[i] === value ){
-        array.splice( i, 1 );
-      }
-    }
-  }
-
-  // from sub/nada/forEach.js (CC0)
-  function forEach( array, callback ) {
-    var
-      isBreak = false,
-      i,
-      length = array.length;
-
-    for ( i = 0; i < length && !isBreak ; i++ ){
-      isBreak = callback( array[i], i ) === true;
-    }
-
-    return isBreak;
-  }
-
-  // from sub/nada/bind.js (CC0)
-  function bind( func, object ) {
-    return function() {
-      return func.apply( object, arguments );
-    };
-  }
-
-  /*
-    Define an alias for a prototype function
-    The alias allows to call the function with the context object
-    as first argument, followed with regular arguments of the function.
-    Example:
-    has = alias( Object.prototype.hasOwnProperty );
-    object.hasOwnProperty( name ) === has( object, name ); // true
-  */
-  function alias( func ) {
-    return bind( func.call, func );
-  }
-
-  has = alias( Object.prototype.hasOwnProperty );
-
-  /*
-    Create a semi-private space to share properties and events
-
-    Parameters:
-      name - string, name of the symbolic space:
-             a domain name and path that you control on the Web,
-             followed with the name of the module.
-             Example: "github.com/eric-brechemier/within/tests/module1"
-      callback - function( get, set, publish, subscribe ), function called
-                 immediately, in the context ('this') of an object,
-                 always the same in each call of within with the same name,
-                 and with four functions as arguments to share properties and
-                 events within this module (described separately below).
-
-    Returns:
-      any, the value returned by the callback function
-  */
-  function within( name, callback ) {
-    var
-      dataSpace,
-      eventSpace;
-
-    if ( !has( dataSpaces, name ) ) {
-      dataSpaces[name] = {};
-      eventSpaces[name] = {};
-    }
-
-    dataSpace = dataSpaces[name];
-    eventSpace = eventSpaces[name];
-
-    /*
-      Retrieve the value of a property previously set in this module
-
-      Parameter:
-        name - string, the name of a property of current module
-
-      Returns:
-        any, the value previously set to the property with given name,
-        or null initially before any value has been set
-    */
-    function get( name ) {
-      if ( !has( dataSpace, name ) ){
-        return null;
-      }
-      return dataSpace[name];
-    }
-
-    /*
-      Set the value of a property of the module
-
-      Parameters:
-        name - string, the name of a property in current module
-        value - any, the new value of the property
-
-      Note:
-      Calling this function is equivalent to setting the property directly
-      on the context object, and the function is only provided for symmetry
-      with get().
-    */
-    function set( name, value ) {
-      dataSpace[name] = value;
-    }
-
-    /*
-      Set the value of a property and fire listeners registered in this module
-      for the event of the same name
-
-      Parameters:
-        name - string, the name of an event and the associated property
-        value - any, the new value of the property, also provided to listeners
-
-      Notes:
-        1) Only listeners registered in this module are triggered: listeners
-        for an event of the same name in a module with a different name are
-        not fired.
-
-        2) The publication of the event will be interrupted by any listener
-        that returns the boolean value true. The following listeners, that
-        were registered later, will not be notified of the current value of
-        the event.
-    */
-    function publish( name, value ) {
-      var listeners;
-      set( name, value );
-      if ( !has( eventSpace, name ) ) {
-        return;
-      }
-      listeners = copy( eventSpace[name] );
-      forEach( listeners, function( listener ) {
-        return listener( value );
-      });
-    }
-
-    /*
-      Register a callback function for the event of given name
-
-      Parameters:
-        name - string, the name of an event and the related property
-        listener - function( value ), the callback triggered immediately
-                   with the current value of the property, if already set,
-                   and each time a new value is published for this property
-                   (not just set) unless a previous callback returns true
-                   which interrupts the publication of the current event.
-
-      Returns:
-        function(), the function to call to remove current listener, which
-        will no longer receive notifications for given event.
-
-      Notes:
-        1) In case the same listener is registered multiple times for the same
-        event, duplicate listeners are removed at the same time.
-        2) In case the same listener is registered to different events,
-        other subscriptions remain active and must be canceled separately.
-    */
-    function subscribe( name, listener ) {
-      var listeners;
-      if ( !has( eventSpace, name ) ) {
-        eventSpace[name] = [];
-      }
-      listeners = eventSpace[name];
-      listeners.push( listener );
-      if ( has( dataSpace, name ) ) {
-        listener( dataSpace[name] );
-      }
-      return function unsubscribe() {
-        remove( listeners, listener );
-      };
-    }
-
-    return callback.apply( dataSpace, [ get, set, publish, subscribe ] );
-  }
-
-  this.within = within;
-});
-
-var Coquette = within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
+;(function(exports) {
   var Coquette = function(game, canvasId, width, height, backgroundColor, autoFocus) {
-    var
-      Renderer = get("Renderer"),
-      Inputter = get("Inputter"),
-      Updater = get("Updater"),
-      Entities = get("Entities"),
-      Runner = get("Runner"),
-      Collider = get("Collider");
+    var canvas = document.getElementById(canvasId);
+    this.renderer = new Coquette.Renderer(this, game, canvas, width, height, backgroundColor);
+    this.inputter = new Coquette.Inputter(this, canvas, autoFocus);
+    this.entities = new Coquette.Entities(this, game);
+    this.runner = new Coquette.Runner(this);
+    this.collider = new Coquette.Collider(this);
 
-    set("game", game);
-    set("canvasId", canvasId);
-    set("width", width);
-    set("height", height);
-    set("backgroundColor", backgroundColor);
-    set("autoFocus", autoFocus);
+    var self = this;
+    this.ticker = new Coquette.Ticker(this, function(interval) {
+      self.collider.update(interval);
+      self.runner.update(interval);
+      if (game.update !== undefined) {
+        game.update(interval);
+      }
 
-    set("coquette", this);
-    set("renderer", new Renderer(canvasId, width, height, backgroundColor));
-    set("inputter", new Inputter(canvasId, autoFocus));
-    set("updater", new Updater());
-    set("entities", new Entities());
-    set("runner", new Runner());
-    set("collider", new Collider());
-
-    // Public API
-    this.renderer = get("renderer");
-    this.inputter = get("inputter");
-    this.updater = get("updater");
-    this.entities = get("entities");
-    this.runner = get("runner");
-    this.collider = get("collider");
-    this.updater.add(this.collider);
-    this.updater.add(this.runner);
-    this.updater.add(this.renderer);
-    this.updater.add(game);
-    this.game = get("game");
+      self.entities.update(interval)
+      self.renderer.update(interval);
+      self.inputter.update();
+    });
   };
 
-  Coquette.get = function() {
-    return get("coquette");
+  exports.Coquette = Coquette;
+})(this);
+
+;(function(exports) {
+  var Collider = function(coquette) {
+    this.coquette = coquette;
   };
 
-  set("Coquette", Coquette);
-
-  // Public API in the browser
-  return Coquette;
-});
-
-within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
-  var Collider = function() {};
-
-  Collider.INITIAL = 0;
-  Collider.SUSTAINED = 1;
-
-  Collider.RECTANGLE = 0;
-  Collider.CIRCLE = 1;
-
+  // if no entities have uncollision(), skip expensive record keeping for uncollisions
+  var isUncollisionOn = function(entities) {
+    for (var i = 0, len = entities.length; i < len; i++) {
+      if (entities[i].uncollision !== undefined) {
+        return true;
+      }
+    }
+    return false;
+  };
 
   Collider.prototype = {
     collideRecords: [],
 
     update: function() {
-      var ent = Coquette.get().entities.all();
+      var ent = this.coquette.entities.all();
       for (var i = 0, len = ent.length; i < len; i++) {
-        for (var j = i; j < len; j++) {
-          if (ent[i] !== ent[j]) {
-            if (Maths.isIntersecting(ent[i], ent[j])) {
-              this.collision(ent[i], ent[j]);
-            } else {
-              this.removeOldCollision(ent[i], ent[j]);
-            }
+        for (var j = i + 1; j < len; j++) {
+          if (this.isIntersecting(ent[i], ent[j])) {
+            this.collision(ent[i], ent[j]);
+          } else {
+            this.removeOldCollision(this.getCollideRecordIds(ent[i], ent[j])[0]);
           }
         }
       }
     },
 
     collision: function(entity1, entity2) {
-      if (this.getCollideRecord(entity1, entity2) === undefined) {
+      var collisionType;
+      if (!isUncollisionOn(this.coquette.entities.all())) {
+        collisionType = this.INITIAL;
+      } else if (this.getCollideRecordIds(entity1, entity2).length === 0) {
         this.collideRecords.push([entity1, entity2]);
-        notifyEntityOfCollision(entity1, entity2, this.INITIAL);
-        notifyEntityOfCollision(entity2, entity1, this.INITIAL);
+        collisionType = this.INITIAL;
       } else {
-        notifyEntityOfCollision(entity1, entity2, this.SUSTAINED);
-        notifyEntityOfCollision(entity2, entity1, this.SUSTAINED);
+        collisionType = this.SUSTAINED;
+      }
+
+      notifyEntityOfCollision(entity1, entity2, collisionType);
+      notifyEntityOfCollision(entity2, entity1, collisionType);
+    },
+
+    destroyEntity: function(entity) {
+      var recordIds = this.getCollideRecordIds(entity);
+      for (var i = 0; i < recordIds.length; i++) {
+        this.removeOldCollision(recordIds[i]);
       }
     },
 
-    removeEntity: function(entity) {
-      this.removeOldCollision(entity);
-    },
-
-    // if passed entities recorded as colliding in history record, remove that record
-    removeOldCollision: function(entity1, entity2) {
-      var recordId = this.getCollideRecord(entity1, entity2);
-      if (recordId !== undefined) {
-        var record = this.collideRecords[recordId];
+    // remove collision at passed index
+    removeOldCollision: function(recordId) {
+      var record = this.collideRecords[recordId];
+      if (record !== undefined) {
         notifyEntityOfUncollision(record[0], record[1])
         notifyEntityOfUncollision(record[1], record[0])
         this.collideRecords.splice(recordId, 1);
       }
     },
 
-    getCollideRecord: function(entity1, entity2) {
-      for (var i = 0, len = this.collideRecords.length; i < len; i++) {
-        // looking for coll where one entity appears
-        if (entity2 === undefined &&
-            (this.collideRecords[i][0] === entity1 ||
-             this.collideRecords[i][1] === entity1)) {
-          return i;
-        // looking for coll between two specific entities
-        } else if (this.collideRecords[i][0] === entity1 &&
-                   this.collideRecords[i][1] === entity2) {
-          return i;
+    getCollideRecordIds: function(entity1, entity2) {
+      if (entity1 !== undefined && entity2 !== undefined) {
+        var recordIds = [];
+        for (var i = 0, len = this.collideRecords.length; i < len; i++) {
+          if (this.collideRecords[i][0] === entity1 && this.collideRecords[i][1] === entity2) {
+            recordIds.push(i);
+          }
         }
+        return recordIds;
+      } else if (entity1 !== undefined) {
+        for (var i = 0, len = this.collideRecords.length; i < len; i++) {
+          if (this.collideRecords[i][0] === entity1 || this.collideRecords[i][1] === entity1) {
+            return [i];
+          }
+        }
+        return [];
+      } else {
+        throw "You must pass at least one entity when searching collision records."
       }
     },
 
-    INITIAL: Collider.INITIAL,
-    SUSTAINED: Collider.SUSTAINED,
+    isIntersecting: function(obj1, obj2) {
+      var obj1BoundingBox = obj1.boundingBox || this.RECTANGLE;
+      var obj2BoundingBox = obj2.boundingBox || this.RECTANGLE;
 
-    RECTANGLE: Collider.RECTANGLE,
-    CIRCLE: Collider.CIRCLE
+      if (obj1BoundingBox === this.RECTANGLE && obj2BoundingBox === this.RECTANGLE) {
+        return Maths.rectanglesIntersecting(obj1, obj2);
+      } else if (obj1BoundingBox === this.CIRCLE && obj2BoundingBox === this.RECTANGLE) {
+        return Maths.circleAndRectangleIntersecting(obj1, obj2);
+      } else if (obj1BoundingBox === this.RECTANGLE && obj2BoundingBox === this.CIRCLE) {
+        return Maths.circleAndRectangleIntersecting(obj2, obj1);
+      } else if (obj1BoundingBox === this.POINT && obj2BoundingBox === this.RECTANGLE) {
+        return Maths.pointAndRectangleIntersecting(obj1, obj2);
+      } else if (obj1BoundingBox === this.RECTANGLE && obj2BoundingBox === this.POINT) {
+        return Maths.pointAndRectangleIntersecting(obj2, obj1);
+      } else if (obj1BoundingBox === this.CIRCLE && obj2BoundingBox === this.CIRCLE) {
+        return Maths.circlesIntersecting(obj1, obj2);
+      } else if (obj1BoundingBox === this.POINT && obj2BoundingBox === this.CIRCLE) {
+        return Maths.pointAndCircleIntersecting(obj1, obj2);
+      } else if (obj1BoundingBox === this.CIRCLE && obj2BoundingBox === this.POINT) {
+        return Maths.pointAndCircleIntersecting(obj2, obj1);
+      } else if (obj1BoundingBox === this.POINT && obj2BoundingBox === this.POINT) {
+        return Maths.pointsIntersecting(obj1, obj2);
+      } else {
+        throw "Objects being collision tested have unsupported bounding box types."
+      }
+    },
+
+    INITIAL: 0,
+    SUSTAINED: 1,
+
+    RECTANGLE: 0,
+    CIRCLE: 1,
+    POINT:2
   };
+
+  var orEqual = function(obj1BB, obj2BB, bBType1, bBType2) {
+    return (obj1BB === bBType1 && obj2BB === bBType2) ||
+      (obj1BB === bBType2 && obj2BB === bBType1);
+  }
 
   var notifyEntityOfCollision = function(entity, other, type) {
     if (entity.collision !== undefined) {
@@ -346,27 +170,21 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
       }
     },
 
-    isIntersecting: function(obj1, obj2) {
-      var obj1BoundingBox = obj1.boundingBox || Collider.RECTANGLE;
-      var obj2BoundingBox = obj2.boundingBox || Collider.RECTANGLE;
-      if (obj1BoundingBox === Collider.RECTANGLE &&
-          obj2BoundingBox === Collider.RECTANGLE) {
-        return Maths.rectanglesIntersecting(obj1, obj2);
-      } else if (obj1BoundingBox === Collider.CIRCLE &&
-                 obj2BoundingBox === Collider.CIRCLE) {
-        return Maths.circlesIntersecting(obj1, obj2);
-      } else if (obj1BoundingBox === Collider.CIRCLE) {
-        return Maths.circleAndRectangleIntersecting(obj1, obj2);
-      } else if (obj1BoundingBox === Collider.RECTANGLE) {
-        return Maths.circleAndRectangleIntersecting(obj2, obj1);
-      } else {
-        throw "Objects being collision tested have unsupported bounding box types."
-      }
-    },
-
     circlesIntersecting: function(obj1, obj2) {
       return Maths.distance(Maths.center(obj1), Maths.center(obj2)) <
         obj1.size.x / 2 + obj2.size.x / 2;
+    },
+
+    pointAndCircleIntersecting: function(obj1, obj2) {
+      return this.distance(obj1.pos, this.center(obj2)) < obj2.size.x / 2;
+    },
+
+    pointAndRectangleIntersecting: function(obj1, obj2) {
+      return this.pointInsideObj(obj1.pos, obj2);
+    },
+
+    pointsIntersecting: function(obj1, obj2) {
+      return obj1.pos.x === obj2.pos.x && obj1.pos.y === obj2.pos.y;
     },
 
     pointInsideObj: function(point, obj) {
@@ -472,66 +290,170 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     },
   };
 
-  Collider.Maths = Maths;
-  set("Collider", Collider);
-});
+  exports.Collider = Collider;
+  exports.Collider.Maths = Maths;
+})(typeof exports === 'undefined' ? this.Coquette : exports);
 
-within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
-  var Inputter = function(canvasId, autoFocus) {
-    if (autoFocus === undefined) {
-      autoFocus = true;
-    }
+;(function(exports) {
+  var Inputter = function(coquette, canvas, autoFocus) {
+    this.coquette = coquette;
+    this._keyDownState = {};
+    this._keyPressedState = {};
+    var self = this;
+
+    // handle whether to autofocus on canvas, or not
 
     var inputReceiverElement = window;
-    if (!autoFocus) {
-      inputReceiverElement = document.getElementById(canvasId)
+    if (autoFocus === false) {
+      inputReceiverElement = canvas;
       inputReceiverElement.contentEditable = true; // lets canvas get focus and get key events
+      this.suppressedKeys = [];
     } else {
+      this.supressedKeys = [
+        this.SPACE,
+        this.LEFT_ARROW,
+        this.UP_ARROW,
+        this.RIGHT_ARROW,
+        this.DOWN_ARROW
+      ];
+
       // suppress scrolling
       window.addEventListener("keydown", function(e) {
-        // space and arrow keys
-        if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
-          e.preventDefault();
+        for (var i = 0; i < self.supressedKeys.length; i++) {
+          if(self.supressedKeys[i] === e.keyCode) {
+            e.preventDefault();
+            return;
+          }
         }
       }, false);
     }
 
-    inputReceiverElement.addEventListener('keydown', this.keydown.bind(this), false);
-    inputReceiverElement.addEventListener('keyup', this.keyup.bind(this), false);
+    // set up key listeners
+
+    inputReceiverElement.addEventListener('keydown', function(e) {
+      self._keyDownState[e.keyCode] = true;
+      if (self._keyPressedState[e.keyCode] === undefined) { // start of new keypress
+        self._keyPressedState[e.keyCode] = true; // register keypress in progress
+      }
+    }, false);
+
+    inputReceiverElement.addEventListener('keyup', function(e) {
+      self._keyDownState[e.keyCode] = false;
+      if (self._keyPressedState[e.keyCode] === false) { // prev keypress over
+        self._keyPressedState[e.keyCode] = undefined; // prep for keydown to start next press
+      }
+    }, false);
   };
 
   Inputter.prototype = {
-    _state: {},
-    bindings: {},
-
-    state: function(keyCode, state) {
-      if (state !== undefined) {
-        this._state[keyCode] = state;
-      } else {
-        return this._state[keyCode] || false;
+    update: function() {
+      for (var i in this._keyPressedState) {
+        if (this._keyPressedState[i] === true) { // tick passed and press event in progress
+          this._keyPressedState[i] = false; // end key press
+        }
       }
     },
 
-    keydown: function(e) {
-      this.state(e.keyCode, true);
+    down: function(keyCode) {
+      return this._keyDownState[keyCode] || false;
     },
 
-    keyup: function(e) {
-      this.state(e.keyCode, false);
+    pressed: function(keyCode) {
+      return this._keyPressedState[keyCode] || false;
     },
 
+    BACKSPACE: 8,
+    TAB: 9,
+    ENTER: 13,
+    SHIFT: 16,
+    CTRL: 17,
+    ALT: 18,
+    PAUSE: 19,
+    CAPS_LOCK: 20,
+    ESC: 27,
+    SPACE: 32,
+    PAGE_UP: 33,
+    PAGE_DOWN: 34,
+    END: 35,
+    HOME: 36,
     LEFT_ARROW: 37,
-    RIGHT_ARROW: 39,
     UP_ARROW: 38,
+    RIGHT_ARROW: 39,
     DOWN_ARROW: 40,
-    SPACE: 32
+    INSERT: 45,
+    DELETE: 46,
+    ZERO: 48,
+    ONE: 49,
+    TWO: 50,
+    THREE: 51,
+    FOUR: 52,
+    FIVE: 53,
+    SIX: 54,
+    SEVEN: 55,
+    EIGHT: 56,
+    NINE: 57,
+    A: 65,
+    B: 66,
+    C: 67,
+    D: 68,
+    E: 69,
+    F: 70,
+    G: 71,
+    H: 72,
+    I: 73,
+    J: 74,
+    K: 75,
+    L: 76,
+    M: 77,
+    N: 78,
+    O: 79,
+    P: 80,
+    Q: 81,
+    R: 82,
+    S: 83,
+    T: 84,
+    U: 85,
+    V: 86,
+    W: 87,
+    X: 88,
+    Y: 89,
+    Z: 90,
+    F1: 112,
+    F2: 113,
+    F3: 114,
+    F4: 115,
+    F5: 116,
+    F6: 117,
+    F7: 118,
+    F8: 119,
+    F9: 120,
+    F10: 121,
+    F11: 122,
+    F12: 123,
+    NUM_LOCK: 144,
+    SCROLL_LOCK: 145,
+    SEMI_COLON: 186,
+    EQUALS: 187,
+    COMMA: 188,
+    DASH: 189,
+    PERIOD: 190,
+    FORWARD_SLASH: 191,
+    GRAVE_ACCENT: 192,
+    OPEN_SQUARE_BRACKET: 219,
+    BACK_SLASH: 220,
+    CLOSE_SQUARE_BRACKET: 221,
+    SINGLE_QUOTE: 222
+
   };
 
-  set("Inputter", Inputter);
-});
+  Inputter.prototype.state = Inputter.prototype.down;
 
-within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
-  function Runner() {
+  exports.Inputter = Inputter;
+})(typeof exports === 'undefined' ? this.Coquette : exports);
+
+;(function(exports) {
+  function Runner(coquette) {
+    this.coquette = coquette;
     this.runs = [];
   };
 
@@ -542,7 +464,7 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
 
     run: function() {
       while(this.runs.length > 0) {
-        var run = this.runs.pop();
+        var run = this.runs.shift();
         run.fn(run.obj);
       }
     },
@@ -555,57 +477,35 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     }
   };
 
-  set("Runner", Runner);
-});
+  exports.Runner = Runner;
+})(typeof exports === 'undefined' ? this.Coquette : exports);
 
-within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
+;(function(exports) {
   var interval = 16;
 
-  function Updater() {
+  function Ticker(coquette, gameLoop) {
     setupRequestAnimationFrame();
-    this.updatees = [];
-    this.tick = interval;
-    this.prev = new Date().getTime();
 
-    var self = this;
-    var update = function() {
-      var now = new Date().getTime();
-      self.tick = now - self.prev;
-      self.prev = now;
-
-      // call update fns
-      for (var i = 0; i < self.updatees.length; i++) {
-        if (self.updatees[i].update !== undefined) {
-          self.updatees[i].update();
-        }
-      }
-
-      // call draw fns
-      for (var i = 0; i < self.updatees.length; i++) {
-        if (self.updatees[i].draw !== undefined) {
-          self.updatees[i].draw();
-        }
-      }
-
-      requestAnimationFrame(update);
+    var nextTickFn;
+    this.stop = function() {
+      nextTickFn = function() {};
     };
 
-    requestAnimationFrame(update);
-  };
+    this.start = function() {
+      var prev = new Date().getTime();
+      var tick = function() {
+        var now = new Date().getTime();
+        var interval = now - prev;
+        prev = now;
+        gameLoop(interval);
+        requestAnimationFrame(nextTickFn);
+      };
 
-  Updater.prototype = {
-    add: function(updatee) {
-      this.updatees.push(updatee);
-    },
+      nextTickFn = tick;
+      requestAnimationFrame(nextTickFn);
+    };
 
-    remove: function(updatee) {
-      for(var i = 0; i < this.updatees.length; i++) {
-        if(this.updatees[i] === updatee) {
-          this.updatees.splice(i, 1);
-          break;
-        }
-      }
-    }
+    this.start();
   };
 
   // From: https://gist.github.com/paulirish/1579671
@@ -637,18 +537,29 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     }
   };
 
-  set("Updater", Updater);
-});
+  exports.Ticker = Ticker;
+})(typeof exports === 'undefined' ? this.Coquette : exports);
 
-within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
-  var Renderer = function(canvasId, width, height, backgroundColor) {
-    var canvas = document.getElementById(canvasId);
+;(function(exports) {
+  var Maths;
+  if(typeof module !== 'undefined' && module.exports) { // node
+    Maths = require('./collider').Collider.Maths;
+  } else { // browser
+    Maths = Coquette.Collider.Maths;
+  }
+
+  var Renderer = function(coquette, game, canvas, wView, hView, backgroundColor) {
+    this.coquette = coquette;
+    this.game = game;
     canvas.style.outline = "none"; // stop browser outlining canvas when it has focus
     canvas.style.cursor = "default"; // keep pointer normal when hovering over canvas
     this.ctx = canvas.getContext('2d');
     this.backgroundColor = backgroundColor;
-    canvas.width = this.width = width;
-    canvas.height = this.height = height;
+
+    canvas.width = wView;
+    canvas.height = hView;
+    this.viewSize = { x:wView, y:hView };
+    this.viewCenterPos = { x: this.viewSize.x / 2, y: this.viewSize.y / 2 };
   };
 
   Renderer.prototype = {
@@ -656,40 +567,97 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
       return this.ctx;
     },
 
-    update: function() {
-      this.ctx.fillStyle = this.backgroundColor;
-      this.ctx.fillRect(0, 0, this.width, this.height);
+    getViewSize: function() {
+      return this.viewSize;
     },
 
-    center: function() {
-      return {
-        x: this.width / 2,
-        y: this.height / 2
-      };
+    getViewCenterPos: function() {
+      return this.viewCenterPos;
+    },
+
+    setViewCenterPos: function(pos) {
+      this.viewCenterPos = { x:pos.x, y:pos.y };
+    },
+
+    update: function(interval) {
+      var ctx = this.getCtx();
+
+      var viewTranslate = viewOffset(this.viewCenterPos, this.viewSize);
+
+      // translate so all objs placed relative to viewport
+      ctx.translate(-viewTranslate.x, -viewTranslate.y);
+
+      // draw background
+      ctx.fillStyle = this.backgroundColor;
+      ctx.fillRect(this.viewCenterPos.x - this.viewSize.x / 2,
+                   this.viewCenterPos.y - this.viewSize.y / 2,
+                   this.viewSize.x,
+                   this.viewSize.y);
+
+      // draw game and entities
+      var drawables = [this.game]
+        .concat(this.coquette.entities.all().concat().sort(zindexSort));
+      for (var i = 0, len = drawables.length; i < len; i++) {
+        if (drawables[i].draw !== undefined) {
+          drawables[i].draw(ctx);
+        }
+      }
+
+      // translate back
+      ctx.translate(viewTranslate.x, viewTranslate.y);
     },
 
     onScreen: function(obj) {
-      return obj.pos.x > 0 && obj.pos.x < get("renderer").width &&
-        obj.pos.y > 0 && obj.pos.y < get("renderer").height;
+      return Maths.rectanglesIntersecting(obj, {
+        size: this.viewSize,
+        pos: {
+          x: this.viewCenterPos.x - this.viewSize.x / 2,
+          y: this.viewCenterPos.y - this.viewSize.y / 2
+        }
+      });
     }
   };
 
-  set("Renderer", Renderer);
-});
+  var viewOffset = function(viewCenterPos, viewSize) {
+    return {
+      x:viewCenterPos.x - viewSize.x / 2,
+      y:viewCenterPos.y - viewSize.y / 2
+    }
+  };
 
-within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
-  function Entities() {
+  // sorts passed array by zindex
+  // elements with a higher zindex are drawn on top of those with a lower zindex
+  var zindexSort = function(a, b) {
+    return (a.zindex || 0) < (b.zindex || 0) ? -1 : 1;
+  };
+
+  exports.Renderer = Renderer;
+})(typeof exports === 'undefined' ? this.Coquette : exports);
+
+;(function(exports) {
+  function Entities(coquette, game) {
+    this.coquette = coquette;
+    this.game = game;
     this._entities = [];
   };
 
   Entities.prototype = {
-    all: function(clazz) {
-      if (clazz === undefined) {
+    update: function(interval) {
+      var entities = this.all();
+      for (var i = 0, len = entities.length; i < len; i++) {
+        if (entities[i].update !== undefined) {
+          entities[i].update(interval);
+        }
+      }
+    },
+
+    all: function(Constructor) {
+      if (Constructor === undefined) {
         return this._entities;
       } else {
         var entities = [];
         for (var i = 0; i < this._entities.length; i++) {
-          if (this._entities[i] instanceof clazz) {
+          if (this._entities[i] instanceof Constructor) {
             entities.push(this._entities[i]);
           }
         }
@@ -699,9 +667,9 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     },
 
     create: function(clazz, settings, callback) {
-      get("runner").add(this, function(entities) {
-        var entity = new clazz(get("game"), settings || {});
-        get("updater").add(entity);
+      var self = this;
+      this.coquette.runner.add(this, function(entities) {
+        var entity = new clazz(self.game, settings || {});
         entities._entities.push(entity);
         if (callback !== undefined) {
           callback(entity);
@@ -710,12 +678,11 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     },
 
     destroy: function(entity, callback) {
-      get("runner").add(this, function(entities) {
-        get("updater").remove(entity);
-        entity._killed = true;
-        get("updater").remove(entity);
+      var self = this;
+      this.coquette.runner.add(this, function(entities) {
         for(var i = 0; i < entities._entities.length; i++) {
           if(entities._entities[i] === entity) {
+            self.coquette.collider.destroyEntity(entity);
             entities._entities.splice(i, 1);
             if (callback !== undefined) {
               callback();
@@ -727,6 +694,6 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     }
   };
 
-  set("Entities", Entities);
-});
+  exports.Entities = Entities;
+})(typeof exports === 'undefined' ? this.Coquette : exports);
 

@@ -1,7 +1,8 @@
-within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
-  function Runner() {
+;(function(exports) {
+  function Runner(coquette) {
+    this.coquette = coquette;
     this.runs = [];
-  }
+  };
 
   Runner.prototype = {
     update: function() {
@@ -10,7 +11,7 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
 
     run: function() {
       while(this.runs.length > 0) {
-        var run = this.runs.pop();
+        var run = this.runs.shift();
         run.fn(run.obj);
       }
     },
@@ -23,14 +24,5 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     }
   };
 
-  set("Runner", Runner);
-
-  subscribe("start", function() {
-    set("runner", new Runner());
-  });
-
-  subscribe("started", function() {
-    get("updater").add( get("runner") );
-  });
-
-});
+  exports.Runner = Runner;
+})(typeof exports === 'undefined' ? this.Coquette : exports);

@@ -2,7 +2,7 @@
   var Asteroid = function(game, settings) {
     this.game = game;
     this.pos = settings.pos;
-    this.boundingBox = game.coquette.collider.CIRCLE;
+    this.boundingBox = this.game.coquette.collider.CIRCLE;
 
     if (settings.radius === undefined) {
       this.size = { x: 60, y: 60 };
@@ -23,43 +23,38 @@
   };
 
   Asteroid.prototype = {
-    zIndex: 0,
     destroyed: false,
 
-	  update: function() {
+    update: function(tick) {
       if (this.game.state !== this.game.STATE.PLAYING) return;
-		  var mx = this.vel.x * this.game.coquette.updater.tick;
-		  var my = this.vel.y * this.game.coquette.updater.tick;
+      var mx = this.vel.x * tick;
+      var my = this.vel.y * tick;
       this.pos.x += mx;
       this.pos.y += my;
 
       this.wrap();
-	  },
+    },
 
     wrap: function() {
-      if (this.game.maths.distance(this.game.maths.center(this), this.game.coquette.renderer.center()) >
-          (this.game.coquette.renderer.width / 2 + this.size.x) + 100) {
+      if (this.game.maths.distance(this.game.maths.center(this),
+                                   this.game.coquette.renderer.getViewCenterPos()) >
+          (this.game.coquette.renderer.getViewSize().x / 2 + this.size.x) + 100) {
         if (this.pos.x < 0) {
-          this.pos.x = this.game.coquette.renderer.width;
-          this.game.coquette.collider.removeEntity(this);
-        } else if (this.pos.x > this.game.coquette.renderer.width) {
+          this.pos.x = this.game.coquette.renderer.getViewSize().x;
+        } else if (this.pos.x > this.game.coquette.renderer.getViewSize().x) {
           this.pos.x = -this.size.x;
-          this.game.coquette.collider.removeEntity(this);
         } else if (this.pos.y < 0) {
-          this.pos.y = this.game.coquette.renderer.height + 1;
-          this.game.coquette.collider.removeEntity(this);
-        } else if (this.pos.y > this.game.coquette.renderer.height) {
+          this.pos.y = this.game.coquette.renderer.getViewSize().y + 1;
+        } else if (this.pos.y > this.game.coquette.renderer.getViewSize().y) {
           this.pos.y = 0;
-          this.game.coquette.collider.removeEntity(this);
         }
       }
     },
 
-    draw: function() {
+    draw: function(ctx) {
       if (this.game.state !== this.game.STATE.PLAYING) return;
-      var ctx = this.game.coquette.renderer.getCtx();
 
-      this.game.startClip();
+      this.game.startClip(ctx);
 
       var color = "#fff";
       if (this.collidingAsteroids.length === 0) {
@@ -67,7 +62,7 @@
       }
       this.game.circle(this.pos, this.size.x / 2, color);
 
-      this.game.endClip();
+      this.game.endClip(ctx);
     },
 
     destroy: function(other) {
@@ -97,7 +92,7 @@
             });
           }
         } else if (other instanceof Player) {
-        this.spawnTwin(other);
+          this.spawnTwin(other);
         } else if (other instanceof Asteroid) {
           this.collidingAsteroids.push(other);
         }

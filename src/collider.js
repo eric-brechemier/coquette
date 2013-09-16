@@ -1,78 +1,109 @@
-within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
-  function Collider() {}
+;(function(exports) {
+  var Collider = function(coquette) {
+    this.coquette = coquette;
+  };
+
+  // if no entities have uncollision(), skip expensive record keeping for uncollisions
+  var isUncollisionOn = function(entities) {
+    for (var i = 0, len = entities.length; i < len; i++) {
+      if (entities[i].uncollision !== undefined) {
+        return true;
+      }
+    }
+    return false;
+  };
 
   Collider.prototype = {
     collideRecords: [],
 
     update: function() {
-      var ent = get("entities").all();
+      var ent = this.coquette.entities.all();
       for (var i = 0, len = ent.length; i < len; i++) {
-        for (var j = i; j < len; j++) {
-          if (ent[i] !== ent[j]) {
-            if (this.isIntersecting(ent[i], ent[j])) {
-              this.collision(ent[i], ent[j]);
-            } else {
-              this.removeOldCollision(ent[i], ent[j]);
-            }
+        for (var j = i + 1; j < len; j++) {
+          if (this.isIntersecting(ent[i], ent[j])) {
+            this.collision(ent[i], ent[j]);
+          } else {
+            this.removeOldCollision(this.getCollideRecordIds(ent[i], ent[j])[0]);
           }
         }
       }
     },
 
     collision: function(entity1, entity2) {
-      if (this.getCollideRecord(entity1, entity2) === undefined) {
+      var collisionType;
+      if (!isUncollisionOn(this.coquette.entities.all())) {
+        collisionType = this.INITIAL;
+      } else if (this.getCollideRecordIds(entity1, entity2).length === 0) {
         this.collideRecords.push([entity1, entity2]);
-        notifyEntityOfCollision(entity1, entity2, this.INITIAL);
-        notifyEntityOfCollision(entity2, entity1, this.INITIAL);
+        collisionType = this.INITIAL;
       } else {
-        notifyEntityOfCollision(entity1, entity2, this.SUSTAINED);
-        notifyEntityOfCollision(entity2, entity1, this.SUSTAINED);
+        collisionType = this.SUSTAINED;
+      }
+
+      notifyEntityOfCollision(entity1, entity2, collisionType);
+      notifyEntityOfCollision(entity2, entity1, collisionType);
+    },
+
+    destroyEntity: function(entity) {
+      var recordIds = this.getCollideRecordIds(entity);
+      for (var i = 0; i < recordIds.length; i++) {
+        this.removeOldCollision(recordIds[i]);
       }
     },
 
-    removeEntity: function(entity) {
-      this.removeOldCollision(entity);
-    },
-
-    // if passed entities recorded as colliding in history record, remove that record
-    removeOldCollision: function(entity1, entity2) {
-      var recordId = this.getCollideRecord(entity1, entity2);
-      if (recordId !== undefined) {
-        var record = this.collideRecords[recordId];
+    // remove collision at passed index
+    removeOldCollision: function(recordId) {
+      var record = this.collideRecords[recordId];
+      if (record !== undefined) {
         notifyEntityOfUncollision(record[0], record[1])
         notifyEntityOfUncollision(record[1], record[0])
         this.collideRecords.splice(recordId, 1);
       }
     },
 
-    getCollideRecord: function(entity1, entity2) {
-      for (var i = 0, len = this.collideRecords.length; i < len; i++) {
-        // looking for coll where one entity appears
-        if (entity2 === undefined &&
-            (this.collideRecords[i][0] === entity1 ||
-             this.collideRecords[i][1] === entity1)) {
-          return i;
-        // looking for coll between two specific entities
-        } else if (this.collideRecords[i][0] === entity1 &&
-                   this.collideRecords[i][1] === entity2) {
-          return i;
+    getCollideRecordIds: function(entity1, entity2) {
+      if (entity1 !== undefined && entity2 !== undefined) {
+        var recordIds = [];
+        for (var i = 0, len = this.collideRecords.length; i < len; i++) {
+          if (this.collideRecords[i][0] === entity1 && this.collideRecords[i][1] === entity2) {
+            recordIds.push(i);
+          }
         }
+        return recordIds;
+      } else if (entity1 !== undefined) {
+        for (var i = 0, len = this.collideRecords.length; i < len; i++) {
+          if (this.collideRecords[i][0] === entity1 || this.collideRecords[i][1] === entity1) {
+            return [i];
+          }
+        }
+        return [];
+      } else {
+        throw "You must pass at least one entity when searching collision records."
       }
     },
 
     isIntersecting: function(obj1, obj2) {
       var obj1BoundingBox = obj1.boundingBox || this.RECTANGLE;
       var obj2BoundingBox = obj2.boundingBox || this.RECTANGLE;
-      if (obj1BoundingBox === this.RECTANGLE &&
-          obj2BoundingBox === this.RECTANGLE) {
+
+      if (obj1BoundingBox === this.RECTANGLE && obj2BoundingBox === this.RECTANGLE) {
         return Maths.rectanglesIntersecting(obj1, obj2);
-      } else if (obj1BoundingBox === this.CIRCLE &&
-                 obj2BoundingBox === this.CIRCLE) {
-        return Maths.circlesIntersecting(obj1, obj2);
-      } else if (obj1BoundingBox === this.CIRCLE) {
+      } else if (obj1BoundingBox === this.CIRCLE && obj2BoundingBox === this.RECTANGLE) {
         return Maths.circleAndRectangleIntersecting(obj1, obj2);
-      } else if (obj1BoundingBox === this.RECTANGLE) {
+      } else if (obj1BoundingBox === this.RECTANGLE && obj2BoundingBox === this.CIRCLE) {
         return Maths.circleAndRectangleIntersecting(obj2, obj1);
+      } else if (obj1BoundingBox === this.POINT && obj2BoundingBox === this.RECTANGLE) {
+        return Maths.pointAndRectangleIntersecting(obj1, obj2);
+      } else if (obj1BoundingBox === this.RECTANGLE && obj2BoundingBox === this.POINT) {
+        return Maths.pointAndRectangleIntersecting(obj2, obj1);
+      } else if (obj1BoundingBox === this.CIRCLE && obj2BoundingBox === this.CIRCLE) {
+        return Maths.circlesIntersecting(obj1, obj2);
+      } else if (obj1BoundingBox === this.POINT && obj2BoundingBox === this.CIRCLE) {
+        return Maths.pointAndCircleIntersecting(obj1, obj2);
+      } else if (obj1BoundingBox === this.CIRCLE && obj2BoundingBox === this.POINT) {
+        return Maths.pointAndCircleIntersecting(obj2, obj1);
+      } else if (obj1BoundingBox === this.POINT && obj2BoundingBox === this.POINT) {
+        return Maths.pointsIntersecting(obj1, obj2);
       } else {
         throw "Objects being collision tested have unsupported bounding box types."
       }
@@ -82,8 +113,14 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     SUSTAINED: 1,
 
     RECTANGLE: 0,
-    CIRCLE: 1
+    CIRCLE: 1,
+    POINT:2
   };
+
+  var orEqual = function(obj1BB, obj2BB, bBType1, bBType2) {
+    return (obj1BB === bBType1 && obj2BB === bBType2) ||
+      (obj1BB === bBType2 && obj2BB === bBType1);
+  }
 
   var notifyEntityOfCollision = function(entity, other, type) {
     if (entity.collision !== undefined) {
@@ -110,6 +147,18 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     circlesIntersecting: function(obj1, obj2) {
       return Maths.distance(Maths.center(obj1), Maths.center(obj2)) <
         obj1.size.x / 2 + obj2.size.x / 2;
+    },
+
+    pointAndCircleIntersecting: function(obj1, obj2) {
+      return this.distance(obj1.pos, this.center(obj2)) < obj2.size.x / 2;
+    },
+
+    pointAndRectangleIntersecting: function(obj1, obj2) {
+      return this.pointInsideObj(obj1.pos, obj2);
+    },
+
+    pointsIntersecting: function(obj1, obj2) {
+      return obj1.pos.x === obj2.pos.x && obj1.pos.y === obj2.pos.y;
     },
 
     pointInsideObj: function(point, obj) {
@@ -215,14 +264,6 @@ within("coquette.maryrosecook.com", function(get, set, publish, subscribe) {
     },
   };
 
-  Collider.Maths = Maths;
-  set("Collider", Collider);
-
-  subscribe("start", function() {
-    set("collider", new Collider());
-  });
-
-  subscribe("started", function() {
-    get("updater").add( get("collider") );
-  });
-});
+  exports.Collider = Collider;
+  exports.Collider.Maths = Maths;
+})(typeof exports === 'undefined' ? this.Coquette : exports);
