@@ -1,7 +1,19 @@
 // https://github.com/eric-brechemier/within (License: CC0)
 // within is a factory of semi-private spaces
 // where properties and events can be shared.
-// Usage: within("your.domain", function(get, set, publish, subscribe){ ... });
+//
+// Usage:
+//
+//   // Run code within a module
+//   within( "your.domain/path", function( get, set, publish, subscribe ) {
+//     // semi-private space
+//   });
+//
+//   // Access a shared space by name
+//   within( "your.domain/path" ).set( "property", "value" );
+//
+//   // Create an anonymous space for single use
+//   var space = within();
 
 // from sub/nada/privately.js (CC0)
 function privately( func ) {
@@ -10,9 +22,16 @@ function privately( func ) {
 
 privately(function() {
   var
+    undef, // do not trust global undefined, which can be set to a value
     dataSpaces = {},
     eventSpaces = {},
-    has;
+    has,
+    call;
+
+  // from sub/nada/no.js (CC0)
+  function no( value ) {
+    return value === null || value === undef;
+  }
 
   // from sub/nada/copy.js (CC0)
   function copy( array ) {
@@ -23,7 +42,7 @@ privately(function() {
   function remove( array, value ) {
     var i;
     for ( i = array.length; i >= 0; i-- ) {
-      if ( array[i] === value ){
+      if ( array[ i ] === value ){
         array.splice( i, 1 );
       }
     }
@@ -37,7 +56,7 @@ privately(function() {
       length = array.length;
 
     for ( i = 0; i < length && !isBreak ; i++ ){
-      isBreak = callback( array[i], i ) === true;
+      isBreak = callback( array[ i ], i ) === true;
     }
 
     return isBreak;
@@ -50,146 +69,146 @@ privately(function() {
     };
   }
 
-  /*
-    Define an alias for a prototype function
-    The alias allows to call the function with the context object
-    as first argument, followed with regular arguments of the function.
-    Example:
-    has = alias( Object.prototype.hasOwnProperty );
-    object.hasOwnProperty( name ) === has( object, name ); // true
-  */
+  // from sub/nadasurf/alias.js (CC0)
   function alias( func ) {
     return bind( func.call, func );
   }
 
   has = alias( Object.prototype.hasOwnProperty );
+  call = alias( Function.prototype.call );
 
   /*
+    Function: within( [name, [callback]] ): any
     Create a semi-private space to share properties and events
 
     Parameters:
-      name - string, name of the symbolic space:
-             a domain name and path that you control on the Web,
-             followed with the name of the module.
+      name - string, optional, name of the symbolic space:
+             a domain name and path that you control on the Web.
              Example: "github.com/eric-brechemier/within/tests/module1"
-      callback - function( get, set, publish, subscribe ), function called
-                 immediately, in the context ('this') of an object,
-                 always the same in each call of within with the same name,
-                 and with four functions as arguments to share properties and
-                 events within this module (described separately below).
+      callback - function( get, set, publish, subscribe ), optional, function
+                 called immediately in the context ('this') of the module data
+                 object with four functions as arguments to share properties
+                 and events within this module (described separately below).
 
     Returns:
-      any, the value returned by the callback function
+      any, the value returned by the callback function,
+      or an object with the four methods get, set, publish, subscribe
+      to interact with the module data when the callback function is omitted.
+      When no name is provided, an anonymous module is created for single use.
   */
   function within( name, callback ) {
     var
       dataSpace,
       eventSpace;
 
-    if ( !has( dataSpaces, name ) ) {
-      dataSpaces[name] = {};
-      eventSpaces[name] = {};
+    if ( no( name ) ) {
+      dataSpace = {};
+      eventSpace = {};
+    } else {
+      if ( !has( dataSpaces, name ) ) {
+        dataSpaces[ name ] = {};
+        eventSpaces[ name ] = {};
+      }
+      dataSpace = dataSpaces[ name ];
+      eventSpace = eventSpaces[ name ];
     }
 
-    dataSpace = dataSpaces[name];
-    eventSpace = eventSpaces[name];
-
     /*
-      Retrieve the value of a property previously set in this module
+      Function: get( name ): any
+      Retrieve the value of a property
 
       Parameter:
-        name - string, the name of a property of current module
+        name - string, the name of a property in module data object
 
       Returns:
-        any, the value previously set to the property with given name,
-        or null initially before any value has been set
+        any, the value of the property with given name
+        in the own properties of the module data object
     */
     function get( name ) {
       if ( !has( dataSpace, name ) ){
-        return null;
+        return undef;
       }
-      return dataSpace[name];
+      return dataSpace[ name ];
     }
 
     /*
+      Function: set( name, value )
       Set the value of a property of the module
 
       Parameters:
-        name - string, the name of a property in current module
+        name - string, the name of a property in module data object
         value - any, the new value of the property
-
-      Note:
-      Calling this function is equivalent to setting the property directly
-      on the context object, and the function is only provided for symmetry
-      with get().
     */
     function set( name, value ) {
-      dataSpace[name] = value;
+      dataSpace[ name ] = value;
     }
 
     /*
-      Set the value of a property and fire listeners registered in this module
-      for the event of the same name
+      Function: publish( name, value )
+      Set the value of a property and fire listeners registered for this event
+      in this module and in this module only, until a listener returns true or
+      all listeners have been called.
 
       Parameters:
         name - string, the name of an event and the associated property
-        value - any, the new value of the property, also provided to listeners
-
-      Notes:
-        1) Only listeners registered in this module are triggered: listeners
-        for an event of the same name in a module with a different name are
-        not fired.
-
-        2) The publication of the event will be interrupted by any listener
-        that returns the boolean value true. The following listeners, that
-        were registered later, will not be notified of the current value of
-        the event.
+        value - any, optional, the new value of the property, also provided
+                to listeners, defaults to boolean value true
     */
     function publish( name, value ) {
       var listeners;
+      if ( arguments.length < 2 ) {
+        value = true;
+      }
       set( name, value );
       if ( !has( eventSpace, name ) ) {
         return;
       }
-      listeners = copy( eventSpace[name] );
+      listeners = copy( eventSpace[ name ] );
       forEach( listeners, function( listener ) {
-        return listener( value );
+        return call( listener, dataSpace, value );
       });
     }
 
     /*
+      Function: subscribe( name, listener ): function
       Register a callback function for the event of given name
 
       Parameters:
         name - string, the name of an event and the related property
-        listener - function( value ), the callback triggered immediately
-                   with the current value of the property, if already set,
-                   and each time a new value is published for this property
-                   (not just set) unless a previous callback returns true
-                   which interrupts the publication of the current event.
+        listener - function( value ), the callback triggered in the context of
+                   the module data object:
+                   - immediately, if the property with given name has been set,
+                     with the value of the property as parameter
+                   - then each time the event with given name is published
+                     until the subscription is cancelled, with the value of
+                     the property when the event is published as parameter.
 
       Returns:
-        function(), the function to call to remove current listener, which
-        will no longer receive notifications for given event.
-
-      Notes:
-        1) In case the same listener is registered multiple times for the same
-        event, duplicate listeners are removed at the same time.
-        2) In case the same listener is registered to different events,
-        other subscriptions remain active and must be canceled separately.
+        function(), the function to call to remove current callback function
+        from listeners and prevent it from receiving further notifications
+        for this event.
     */
     function subscribe( name, listener ) {
       var listeners;
       if ( !has( eventSpace, name ) ) {
-        eventSpace[name] = [];
+        eventSpace[ name ] = [];
       }
-      listeners = eventSpace[name];
+      listeners = eventSpace[ name ];
       listeners.push( listener );
       if ( has( dataSpace, name ) ) {
-        listener( dataSpace[name] );
+        call( listener, dataSpace, dataSpace[ name ] );
       }
       return function unsubscribe() {
         remove( listeners, listener );
+      };
+    }
+
+    if ( arguments.length < 2 ) {
+      return {
+        get: get,
+        set: set,
+        publish: publish,
+        subscribe: subscribe
       };
     }
 
