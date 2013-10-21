@@ -1,6 +1,6 @@
 require('../src/')
 
-within("coquette.maryrosecook.com", function() {
+within("github.com/eric-brechemier/coquette", function() {
   var
     Entities = this.Entities;
     Runner = this.Runner;

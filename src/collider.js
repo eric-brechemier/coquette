@@ -1,4 +1,4 @@
-within("coquette.maryrosecook.com", function() {
+within("github.com/eric-brechemier/coquette", function() {
   var Collider = function(coquette) {
     this.coquette = coquette;
   };

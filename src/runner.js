@@ -1,4 +1,4 @@
-within("coquette.maryrosecook.com", function() {
+within("github.com/eric-brechemier/coquette", function() {
   function Runner(coquette) {
     this.coquette = coquette;
     this.runs = [];

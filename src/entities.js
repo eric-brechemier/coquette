@@ -1,4 +1,4 @@
-within("coquette.maryrosecook.com", function() {
+within("github.com/eric-brechemier/coquette", function() {
   function Entities(coquette, game) {
     this.coquette = coquette;
     this.game = game;

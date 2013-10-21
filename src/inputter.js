@@ -1,4 +1,4 @@
-within("coquette.maryrosecook.com", function() {
+within("github.com/eric-brechemier/coquette", function() {
   var Inputter = function(coquette, canvas, autoFocus) {
     this.coquette = coquette;
     this._keyDownState = {};

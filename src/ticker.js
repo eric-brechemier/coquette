@@ -1,4 +1,4 @@
-within("coquette.maryrosecook.com", function() {
+within("github.com/eric-brechemier/coquette", function() {
   var interval = 16;
 
   function Ticker(coquette, gameLoop) {
