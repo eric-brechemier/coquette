@@ -1,4 +1,4 @@
-this.Coquette = within( "github.com/eric-brechemier/coquette", function() {
+this.Coquette = within("github.com/eric-brechemier/coquette", function() {
   var
     Renderer = this.Renderer,
     Inputter = this.Inputter,
