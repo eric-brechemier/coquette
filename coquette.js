@@ -218,7 +218,7 @@ privately(function() {
   this.within = within;
 });
 
-within("coquette.maryrosecook.com", function() {
+within("github.com/eric-brechemier/coquette", function() {
   var Collider = function(coquette) {
     this.coquette = coquette;
   };
@@ -497,7 +497,7 @@ within("coquette.maryrosecook.com", function() {
   this.Collider.Maths = Maths;
 });
 
-within("coquette.maryrosecook.com", function() {
+within("github.com/eric-brechemier/coquette", function() {
   var Inputter = function(coquette, canvas, autoFocus) {
     this.coquette = coquette;
     this._keyDownState = {};
@@ -654,7 +654,7 @@ within("coquette.maryrosecook.com", function() {
   this.Inputter = Inputter;
 });
 
-within("coquette.maryrosecook.com", function() {
+within("github.com/eric-brechemier/coquette", function() {
   function Runner(coquette) {
     this.coquette = coquette;
     this.runs = [];
@@ -683,7 +683,7 @@ within("coquette.maryrosecook.com", function() {
   this.Runner = Runner;
 });
 
-within("coquette.maryrosecook.com", function() {
+within("github.com/eric-brechemier/coquette", function() {
   var interval = 16;
 
   function Ticker(coquette, gameLoop) {
@@ -743,7 +743,7 @@ within("coquette.maryrosecook.com", function() {
   this.Ticker = Ticker;
 });
 
-within("coquette.maryrosecook.com", function() {
+within("github.com/eric-brechemier/coquette", function() {
   var Maths = this.Collider.Maths;
 
   var Renderer = function(coquette, game, canvas, wView, hView, backgroundColor) {
@@ -832,7 +832,7 @@ within("coquette.maryrosecook.com", function() {
   this.Renderer = Renderer;
 });
 
-within("coquette.maryrosecook.com", function() {
+within("github.com/eric-brechemier/coquette", function() {
   function Entities(coquette, game) {
     this.coquette = coquette;
     this.game = game;
@@ -895,7 +895,7 @@ within("coquette.maryrosecook.com", function() {
   this.Entities = Entities;
 });
 
-this.Coquette = within( "coquette.maryrosecook.com", function() {
+this.Coquette = within("github.com/eric-brechemier/coquette", function() {
   var
     Renderer = this.Renderer,
     Inputter = this.Inputter,
