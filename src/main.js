@@ -14,16 +14,16 @@ this.Coquette = within("github.com/eric-brechemier/coquette", function(
       space = within(),
       canvas = document.getElementById(canvasId);
 
-    publish("create-game", {
-      // FIXME: remove coquette property once loose coupling is achieved
-      coquette: this,
-      game: game,
-      canvas: canvas,
-      width: width,
-      height: height,
-      backgroundColor: backgroundColor,
-      autoFocus: autoFocus
-    });
+    // FIXME: no need to share Coquette once loose coupling is in place
+    space.set('coquette', this);
+    space.set('game', game);
+    space.set('canvas', canvas);
+    space.set('width', width);
+    space.set('height', height);
+    space.set('backgroundColor', backgroundColor);
+    space.set('autoFocus', autoFocus);
+
+    publish("create-game", space);
     publish("game-created");
 
     this.renderer = new Renderer(this, game, canvas, width, height, backgroundColor);
