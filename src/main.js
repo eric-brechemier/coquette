@@ -7,7 +7,7 @@ this.Coquette = within("github.com/eric-brechemier/coquette", function() {
     Collider = this.Collider,
     Ticker = this.Ticker;
 
-  var Coquette = function(game, canvasId, width, height, backgroundColor, autoFocus) {
+  function Coquette(game, canvasId, width, height, backgroundColor, autoFocus) {
     var canvas = document.getElementById(canvasId);
     this.renderer = new Renderer(this, game, canvas, width, height, backgroundColor);
     this.inputter = new Inputter(this, canvas, autoFocus);

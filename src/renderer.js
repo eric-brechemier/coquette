@@ -1,7 +1,7 @@
 within("github.com/eric-brechemier/coquette", function() {
   var Maths = this.Collider.Maths;
 
-  var Renderer = function(coquette, game, canvas, wView, hView, backgroundColor) {
+  function Renderer(coquette, game, canvas, wView, hView, backgroundColor) {
     this.coquette = coquette;
     this.game = game;
     canvas.style.outline = "none"; // stop browser outlining canvas when it has focus

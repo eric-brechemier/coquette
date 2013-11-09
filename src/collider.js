@@ -1,5 +1,5 @@
 within("github.com/eric-brechemier/coquette", function() {
-  var Collider = function(coquette) {
+  function Collider(coquette) {
     this.coquette = coquette;
   };
 
