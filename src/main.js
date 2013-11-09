@@ -13,6 +13,8 @@ this.Coquette = within("github.com/eric-brechemier/coquette", function() {
       canvas = document.getElementById(canvasId);
 
     space.publish("setup-game", {
+      // FIXME: remove coquette property once loose coupling is achieved
+      coquette: this,
       game: game,
       canvas: canvas,
       width: width,
