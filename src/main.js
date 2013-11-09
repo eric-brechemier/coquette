@@ -9,7 +9,9 @@ this.Coquette = within("github.com/eric-brechemier/coquette", function(
     Collider = this.Collider,
     Ticker = this.Ticker;
 
-  function Coquette(game, canvasId, width, height, backgroundColor, autoFocus) {
+  function Coquette(
+    game, canvasId, width, height, backgroundColor, autoFocus
+  ) {
     var
       space = within(),
       canvas = document.getElementById(canvasId);
