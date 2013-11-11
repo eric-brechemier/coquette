@@ -57,7 +57,6 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
   subscribe("game-created", function(space) {
     space(function(){
-      var self = this;
       var ticker = new Ticker(this, function(interval) {
         space.publish("tick", interval);
       });
