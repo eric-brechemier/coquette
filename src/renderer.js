@@ -32,7 +32,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
       this.viewCenterPos = { x:pos.x, y:pos.y };
     },
 
-    update: function(interval) {
+    update: function() {
       var ctx = this.getCtx();
 
       var viewTranslate = viewOffset(this.viewCenterPos, this.viewSize);
@@ -95,8 +95,8 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
         this.backgroundColor
       );
 
-      space.subscribe("update-display", function(interval) {
-        renderer.update(interval);
+      space.subscribe("update-display", function() {
+        renderer.update();
       });
 
       this.renderer = renderer;
