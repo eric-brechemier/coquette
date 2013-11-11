@@ -1,4 +1,4 @@
-within("github.com/eric-brechemier/coquette", function() {
+within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   function Collider(coquette) {
     this.coquette = coquette;
   };
@@ -272,6 +272,10 @@ within("github.com/eric-brechemier/coquette", function() {
         Maths.isLineIntersectingCircle(circleObj, corners[3], corners[0]);
     },
   };
+
+  subscribe("create-game", function(space) {
+    this.collider = new Collider(this);
+  });
 
   this.Collider = Collider;
   this.Collider.Maths = Maths;

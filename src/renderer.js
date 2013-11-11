@@ -1,4 +1,4 @@
-within("github.com/eric-brechemier/coquette", function() {
+within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   var Maths = this.Collider.Maths;
 
   function Renderer(coquette, game, canvas, wView, hView, backgroundColor) {
@@ -83,6 +83,18 @@ within("github.com/eric-brechemier/coquette", function() {
   var zindexSort = function(a, b) {
     return (a.zindex || 0) < (b.zindex || 0) ? -1 : 1;
   };
+
+  subscribe("create-game", function(space) {
+    this.renderer =
+      new Renderer(
+        this,
+        this.game,
+        this.canvas,
+        this.width,
+        this.height,
+        this.backgroundColor
+      );
+  });
 
   this.Renderer = Renderer;
 });

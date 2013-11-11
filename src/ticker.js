@@ -1,4 +1,4 @@
-within("github.com/eric-brechemier/coquette", function() {
+within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   var interval = 16;
 
   function Ticker(coquette, gameLoop) {
@@ -54,6 +54,24 @@ within("github.com/eric-brechemier/coquette", function() {
       };
     }
   };
+
+  subscribe("game-created", function(space) {
+    var self = this;
+    this.ticker = new Ticker(this, function(interval) {
+      space.publish("update-game", interval);
+      space.publish("game-updated");
+
+      self.collider.update(interval);
+      self.runner.update(interval);
+      if (self.game.update !== undefined) {
+        self.game.update(interval);
+      }
+
+      self.entities.update(interval)
+      self.renderer.update(interval);
+      self.inputter.update();
+    });
+  });
 
   this.Ticker = Ticker;
 });

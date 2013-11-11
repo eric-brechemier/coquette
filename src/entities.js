@@ -1,4 +1,4 @@
-within("github.com/eric-brechemier/coquette", function() {
+within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   function Entities(coquette, game) {
     this.coquette = coquette;
     this.game = game;
@@ -57,6 +57,10 @@ within("github.com/eric-brechemier/coquette", function() {
       });
     }
   };
+
+  subscribe("create-game", function(space) {
+    this.entities = new Entities(this, this.game);
+  });
 
   this.Entities = Entities;
 });

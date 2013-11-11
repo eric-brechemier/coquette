@@ -1,4 +1,4 @@
-within("github.com/eric-brechemier/coquette", function() {
+within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   function Runner(coquette) {
     this.coquette = coquette;
     this.runs = [];
@@ -23,6 +23,10 @@ within("github.com/eric-brechemier/coquette", function() {
       });
     }
   };
+
+  subscribe("create-game", function(space) {
+    this.runner = new Runner(this);
+  });
 
   this.Runner = Runner;
 });

@@ -1,4 +1,4 @@
-within("github.com/eric-brechemier/coquette", function() {
+within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   function Inputter(coquette, canvas, autoFocus) {
     this.coquette = coquette;
     this._keyDownState = {};
@@ -151,6 +151,10 @@ within("github.com/eric-brechemier/coquette", function() {
   };
 
   Inputter.prototype.state = Inputter.prototype.down;
+
+  subscribe("create-game", function(space) {
+    this.inputter = new Inputter(this, this.canvas, this.autoFocus);
+  });
 
   this.Inputter = Inputter;
 });
