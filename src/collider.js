@@ -277,7 +277,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     space(function(){
       var collider = new Collider(this);
 
-      space.subscribe("before-game-update", function() {
+      space.subscribe("after-entities-update", function() {
         collider.update();
       });
 
