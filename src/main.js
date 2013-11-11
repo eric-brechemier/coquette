@@ -1,5 +1,5 @@
 this.Coquette = within("github.com/eric-brechemier/coquette", function(
-  get, set, publish, subscribe
+  publish, subscribe, get, set
 ) {
   var
     Renderer = this.Renderer,
@@ -16,39 +16,39 @@ this.Coquette = within("github.com/eric-brechemier/coquette", function(
       space = within(),
       canvas = document.getElementById(canvasId);
 
-    // FIXME: no need to share Coquette once loose coupling is in place
-    space.set('coquette', this);
-    space.set('game', game);
-    space.set('canvas', canvas);
-    space.set('width', width);
-    space.set('height', height);
-    space.set('backgroundColor', backgroundColor);
-    space.set('autoFocus', autoFocus);
+    space(function() {
+      this.game = game;
+      this.canvas = canvas;
+      this.width = width;
+      this.height = height;
+      this.backgroundColor = backgroundColor;
+      this.autoFocus = autoFocus;
+
+      this.renderer = new Renderer(this, game, canvas, width, height, backgroundColor);
+      this.inputter = new Inputter(this, canvas, autoFocus);
+      this.entities = new Entities(this, game);
+      this.runner = new Runner(this);
+      this.collider = new Collider(this);
+
+      var self = this;
+      this.ticker = new Ticker(this, function(interval) {
+        space.publish("update-game", interval);
+        space.publish("game-updated");
+
+        self.collider.update(interval);
+        self.runner.update(interval);
+        if (game.update !== undefined) {
+          game.update(interval);
+        }
+
+        self.entities.update(interval)
+        self.renderer.update(interval);
+        self.inputter.update();
+      });
+    });
 
     publish("create-game", space);
     publish("game-created");
-
-    this.renderer = new Renderer(this, game, canvas, width, height, backgroundColor);
-    this.inputter = new Inputter(this, canvas, autoFocus);
-    this.entities = new Entities(this, game);
-    this.runner = new Runner(this);
-    this.collider = new Collider(this);
-
-    var self = this;
-    this.ticker = new Ticker(this, function(interval) {
-      space.publish("update-game", interval);
-      space.publish("game-updated");
-
-      self.collider.update(interval);
-      self.runner.update(interval);
-      if (game.update !== undefined) {
-        game.update(interval);
-      }
-
-      self.entities.update(interval)
-      self.renderer.update(interval);
-      self.inputter.update();
-    });
   };
 
   return Coquette;
