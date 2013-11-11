@@ -1,8 +1,8 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
-  function Entities(coquette, game) {
+  function Entities(coquette, game, entities) {
     this.coquette = coquette;
     this.game = game;
-    this._entities = [];
+    this._entities = entities === undefined? []: entities;
   };
 
   Entities.prototype = {
