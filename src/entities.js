@@ -62,7 +62,11 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     space(function(){
       var entities = new Entities(this, this.game);
 
-      space.subscribe("after-game-update", function(interval) {
+      space.subscribe("before-entities-update", function() {
+        // TODO: create/destroy entities
+      });
+
+      space.subscribe("update-entities", function(interval) {
         entities.update(interval);
       });
 
