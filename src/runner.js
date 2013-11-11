@@ -1,6 +1,5 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
-  function Runner(coquette) {
-    this.coquette = coquette;
+  function Runner() {
     this.runs = [];
   };
 
