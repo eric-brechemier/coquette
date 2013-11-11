@@ -86,15 +86,20 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
   subscribe("create-game", function(space) {
     space(function(){
-      this.renderer =
-        new Renderer(
-          this,
-          this.game,
-          this.canvas,
-          this.width,
-          this.height,
-          this.backgroundColor
-        );
+      var renderer = new Renderer(
+        this,
+        this.game,
+        this.canvas,
+        this.width,
+        this.height,
+        this.backgroundColor
+      );
+
+      space.subscribe("update-display", function(interval) {
+        renderer.update(interval);
+      });
+
+      this.renderer = renderer;
     });
   });
 

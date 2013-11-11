@@ -6,6 +6,13 @@ this.Coquette = within(
       game, canvasId, width, height, backgroundColor, autoFocus
     ) {
       var space = within();
+
+      space.subscribe("update-game", function(interval) {
+        if (game.update !== undefined) {
+          game.update(interval);
+        }
+      });
+
       return space(function() {
         this.game = game;
         this.canvas = document.getElementById(canvasId);

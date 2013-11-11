@@ -154,7 +154,13 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
   subscribe("create-game", function(space) {
     space(function(){
-      this.inputter = new Inputter(this, this.canvas, this.autoFocus);
+      var inputter = new Inputter(this, this.canvas, this.autoFocus);
+
+      space.subscribe("after-display-update", function(){
+        inputter.update();
+      });
+
+      this.inputter = inputter;
     });
   });
 

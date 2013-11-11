@@ -275,7 +275,13 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
   subscribe("create-game", function(space) {
     space(function(){
-      this.collider = new Collider(this);
+      var collider = new Collider(this);
+
+      space.subscribe("before-game-update", function(interval) {
+        collider.update(interval);
+      });
+
+      this.collider = collider;
     });
   });
 
