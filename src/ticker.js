@@ -1,7 +1,7 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   var interval = 16;
 
-  function Ticker(coquette, gameLoop) {
+  function Ticker(gameLoop) {
     setupRequestAnimationFrame();
 
     var nextTickFn;
@@ -57,7 +57,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
   subscribe("game-created", function(space) {
     space(function(){
-      var ticker = new Ticker(this, function(interval) {
+      var ticker = new Ticker(function(interval) {
         space.publish("tick", interval);
       });
 
