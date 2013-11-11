@@ -8,6 +8,10 @@ this.Coquette = within(
       var space = within();
 
       space.subscribe("tick", function(interval) {
+        space.publish("before-entities-update", interval);
+        space.publish("update-entities", interval);
+        space.publish("after-entities-update", interval);
+
         space.publish("before-game-update", interval);
         space.publish("update-game", interval);
         space.publish("after-game-update", interval);
