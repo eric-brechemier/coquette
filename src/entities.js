@@ -59,7 +59,9 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   };
 
   subscribe("create-game", function(space) {
-    this.entities = new Entities(this, this.game);
+    space(function(){
+      this.entities = new Entities(this, this.game);
+    });
   });
 
   this.Entities = Entities;

@@ -56,20 +56,22 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   };
 
   subscribe("game-created", function(space) {
-    var self = this;
-    this.ticker = new Ticker(this, function(interval) {
-      space.publish("update-game", interval);
-      space.publish("game-updated");
+    space(function(){
+      var self = this;
+      this.ticker = new Ticker(this, function(interval) {
+        space.publish("update-game", interval);
+        space.publish("game-updated");
 
-      self.collider.update(interval);
-      self.runner.update(interval);
-      if (self.game.update !== undefined) {
-        self.game.update(interval);
-      }
+        self.collider.update(interval);
+        self.runner.update(interval);
+        if (self.game.update !== undefined) {
+          self.game.update(interval);
+        }
 
-      self.entities.update(interval)
-      self.renderer.update(interval);
-      self.inputter.update();
+        self.entities.update(interval)
+        self.renderer.update(interval);
+        self.inputter.update();
+      });
     });
   });
 

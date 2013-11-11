@@ -274,7 +274,9 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   };
 
   subscribe("create-game", function(space) {
-    this.collider = new Collider(this);
+    space(function(){
+      this.collider = new Collider(this);
+    });
   });
 
   this.Collider = Collider;

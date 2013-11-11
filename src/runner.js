@@ -25,7 +25,9 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   };
 
   subscribe("create-game", function(space) {
-    this.runner = new Runner(this);
+    space(function(){
+      this.runner = new Runner(this);
+    });
   });
 
   this.Runner = Runner;

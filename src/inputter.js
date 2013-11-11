@@ -153,7 +153,9 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   Inputter.prototype.state = Inputter.prototype.down;
 
   subscribe("create-game", function(space) {
-    this.inputter = new Inputter(this, this.canvas, this.autoFocus);
+    space(function(){
+      this.inputter = new Inputter(this, this.canvas, this.autoFocus);
+    });
   });
 
   this.Inputter = Inputter;
