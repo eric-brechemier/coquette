@@ -59,13 +59,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     space(function(){
       var self = this;
       var ticker = new Ticker(this, function(interval) {
-        space.publish("before-game-update", interval);
-        space.publish("update-game", interval);
-        space.publish("after-game-update", interval);
-
-        space.publish("before-display-update", interval);
-        space.publish("update-display", interval);
-        space.publish("after-display-update", interval);
+        space.publish("tick", interval);
       });
 
       this.ticker = ticker;
