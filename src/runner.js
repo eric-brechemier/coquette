@@ -1,10 +1,13 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
-  function Runner() {
+  function Runner(space) {
+    this.space = space;
     this.runs = [];
   };
 
   Runner.prototype = {
     update: function() {
+      this.space.publish("create-entities");
+      this.space.publish("destroy-entities");
       this.run();
     },
 
