@@ -10,7 +10,7 @@ within("github.com/eric-brechemier/coquette", function() {
     var space = within();
     return space(function(){
       this.game = "woo";
-      this.entities = new Entities(space, this.game);
+      this.entities = new Entities(space);
       this.runner = new Runner(space);
       this.collider = new Collider(space);
       return this;

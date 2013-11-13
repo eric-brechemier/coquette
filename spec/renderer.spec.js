@@ -23,7 +23,9 @@ within("github.com/eric-brechemier/coquette", function() {
     return space(function(){
       this.entities = new Entities(space);
       this.runner = new Runner(space);
-      this.renderer = new Renderer(space, {}, new MockCanvas());
+      this.game = {};
+      this.canvas = new MockCanvas();
+      this.renderer = new Renderer(space);
       return this;
     });
   };
@@ -88,7 +90,11 @@ within("github.com/eric-brechemier/coquette", function() {
 
     describe('view center position', function() {
       it('should default view top left to 0 0', function() {
-        var r = new Renderer(within(), null, new MockCanvas(), 200, 100);
+        var space = within();
+        space.set("canvas", new MockCanvas());
+        space.set("width", 200);
+        space.set("height", 100);
+        var r = new Renderer(space);
         expect({
           x: r.getViewCenterPos().x - r.getViewSize().x / 2,
           y: r.getViewCenterPos().y - r.getViewSize().y / 2
@@ -96,7 +102,11 @@ within("github.com/eric-brechemier/coquette", function() {
       });
 
       it('should be able to get view center with getViewCenterPos()', function() {
-        var r = new Renderer(within(), null, new MockCanvas(), 200, 100);
+        var space = within();
+        space.set("canvas", new MockCanvas());
+        space.set("width", 200);
+        space.set("height", 100);
+        var r = new Renderer(space);
         expect({
           x: r.getViewCenterPos().x - r.getViewSize().x / 2,
           y: r.getViewCenterPos().y - r.getViewSize().y / 2
@@ -105,13 +115,17 @@ within("github.com/eric-brechemier/coquette", function() {
 
       describe('setViewCenterPos()', function() {
         it('should be able to set view center', function() {
-          var r = new Renderer(within(), null, new MockCanvas());
+          var space = within();
+          space.set("canvas", new MockCanvas());
+          var r = new Renderer(space);
           r.setViewCenterPos({ x: 10, y: 12 });
           expect(r.getViewCenterPos()).toEqual({ x: 10, y: 12 });
         });
 
         it('should make new obj to hold set pos', function() {
-          var r = new Renderer(within(), null, new MockCanvas());
+          var space = within();
+          space.set("canvas", new MockCanvas());
+          var r = new Renderer(space);
           var newPos = { x: 10, y: 12 };
           r.setViewCenterPos(newPos);
           expect(r.getViewCenterPos()).toEqual({ x: 10, y: 12 });
@@ -123,33 +137,50 @@ within("github.com/eric-brechemier/coquette", function() {
 
     describe('getCtx()', function() {
       it('should return ctx', function() {
-        var r = new Renderer(within(), null, new MockCanvas());
+        var space = within();
+        space.set("canvas", new MockCanvas());
+        var r = new Renderer(space);
         expect(r.getCtx() instanceof MockContext).toEqual(true);
       });
     });
 
     describe('background color', function() {
       it('should set background color to passed color', function() {
-        var r = new Renderer(within(), null, new MockCanvas(), null, null, "#aaa");
+        var space = within();
+        space.set("canvas", new MockCanvas())
+        space.set("backgroundColor", "#aaa");
+        var r = new Renderer(space);
         expect(r.backgroundColor).toEqual("#aaa");
       });
     });
 
     describe('view size', function() {
       it('should set view size to passed vals', function() {
-        var r = new Renderer(within(), null, new MockCanvas(), 100, 200);
+        var space = within();
+        space.set("canvas", new MockCanvas());
+        space.set("width", 100);
+        space.set("height", 200);
+        var r = new Renderer(space);
         expect(r.getViewSize()).toEqual({ x: 100, y: 200 });
       });
 
       it('should set width and height of canvas to passed view size', function() {
+        var space = within();
         var canvas = new MockCanvas();
-        var r = new Renderer(within(), null, canvas, 100, 200);
+        space.set("canvas", canvas);
+        space.set("width", 100);
+        space.set("height", 200);
+        var r = new Renderer(space);
         expect(canvas.width).toEqual(100);
         expect(canvas.height).toEqual(200);
       });
 
       it('should be able to get view size with getViewSize()', function() {
-        var r = new Renderer(within(), null, new MockCanvas(), 100, 200);
+        var space = within();
+        space.set("canvas", new MockCanvas());
+        space.set("width", 100);
+        space.set("height", 200);
+        var r = new Renderer(space);
         expect(r.getViewSize()).toEqual({ x: 100, y: 200 });
       });
     });
@@ -167,7 +198,9 @@ within("github.com/eric-brechemier/coquette", function() {
         };
 
         expect(ran).toEqual(false);
-        new Renderer(within(), null, new MockCanvas()).onScreen();
+        var space = within();
+        space.set("canvas", new MockCanvas());
+        new Renderer(space).onScreen();
         expect(ran).toEqual(true);
       });
     });

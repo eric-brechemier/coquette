@@ -465,10 +465,12 @@ within("github.com/eric-brechemier/coquette", function() {
             this.entities = new Entities(space);
             this.runner = new Runner(space);
             this.collider = new Collider(space);
-            this.renderer = new Renderer(space, {}, {
+            this.game = {};
+            this.canvas = {
               style: {},
               getContext: function() { }
-            });
+            };
+            this.renderer = new Renderer(space);
             return this;
           });
         };
