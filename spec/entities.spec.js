@@ -7,10 +7,12 @@ within("github.com/eric-brechemier/coquette", function() {
     Collider = this.Collider;
 
   var MockCoquette = function() {
+    var space = within();
+    this.space = space;
     this.game = "woo";
-    this.entities = new Entities(this, this.game);
-    this.runner = new Runner(this);
-    this.collider = new Collider(this);
+    this.entities = new Entities(space, this.game);
+    this.runner = new Runner(space);
+    this.collider = new Collider(space);
   };
 
   var Thing = function() {};

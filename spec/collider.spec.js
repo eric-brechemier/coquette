@@ -27,9 +27,11 @@ within("github.com/eric-brechemier/coquette", function() {
   describe('collider', function() {
     describe('main collider obj', function() {
       var MockCoquette = function() {
-        this.entities = new Entities(this);
-        this.runner = new Runner(this);
-        this.collider = new Collider(this);
+        var space = within();
+        this.space = space;
+        this.entities = new Entities(space);
+        this.runner = new Runner(space);
+        this.collider = new Collider(space);
       };
 
       var Thing = function(__, settings) {
@@ -252,7 +254,7 @@ within("github.com/eric-brechemier/coquette", function() {
       describe('isColliding', function() {
         describe('objects not set up for collisions', function() {
           var correctObj = mockObj(5, 5, 10, 10);
-          var c = new Collider();
+          var c = new Collider(within());
           it('should return true for two objects with pos and size', function() {
             expect(c.isColliding(correctObj, correctObj)).toEqual(true);
           });
@@ -271,7 +273,7 @@ within("github.com/eric-brechemier/coquette", function() {
 
       describe('isIntersecting', function() {
         it('should use rect as default bounding box', function() {
-          var collider = new Collider();
+          var collider = new Collider(within());
           var obj1 = mockObj(5, 5, 10, 10);
           var obj2 = mockObj(15, 15, 10, 10);
           var intersecting = collider.isIntersecting(obj1, obj2);
@@ -281,51 +283,83 @@ within("github.com/eric-brechemier/coquette", function() {
         describe('two rects', function() {
           describe('collisions', function() {
             it('should return true: bottom right corner over top left corner', function() {
-              expect(new Collider().isIntersecting(mockObj(10, 10, 2, 4),
-                                                   mockObj(12, 14, 4, 2))).toEqual(true);
+              expect(
+                new Collider(within()).isIntersecting(
+                  mockObj(10, 10, 2, 4),
+                  mockObj(12, 14, 4, 2)
+                )
+              ).toEqual(true);
             });
 
             it('should return true: bottom left corner over top right corner', function() {
-              expect(new Collider().isIntersecting(mockObj(10, 10, 2, 4),
-                                                   mockObj(6, 14, 4, 2))).toEqual(true);
+              expect(
+                new Collider(within()).isIntersecting(
+                  mockObj(10, 10, 2, 4),
+                  mockObj(6, 14, 4, 2)
+                )
+              ).toEqual(true);
             });
 
             it('should return true: top left corner over bottom right corner', function() {
-              expect(new Collider().isIntersecting(mockObj(12, 14, 4, 2),
-                                                   mockObj(10, 10, 2, 4))).toEqual(true);
+              expect(
+                new Collider(within()).isIntersecting(
+                  mockObj(12, 14, 4, 2),
+                  mockObj(10, 10, 2, 4)
+                )
+              ).toEqual(true);
             });
 
             it('should return true: top right corner over bottom left corner', function() {
-              expect(new Collider().isIntersecting(mockObj(6, 14, 4, 2),
-                                                   mockObj(10, 10, 2, 4))).toEqual(true);
+              expect(
+                new Collider(within()).isIntersecting(
+                  mockObj(6, 14, 4, 2),
+                  mockObj(10, 10, 2, 4)
+                )
+              ).toEqual(true);
             });
           });
 
           describe('non-collisions', function() {
             it('should return true: bottom right corner over top left corner', function() {
-              expect(new Collider().isIntersecting(mockObj(10, 10, 2, 4),
-                                                   mockObj(13, 14, 4, 2))).toEqual(false);
+              expect(
+                new Collider(within()).isIntersecting(
+                  mockObj(10, 10, 2, 4),
+                  mockObj(13, 14, 4, 2)
+                )
+              ).toEqual(false);
             });
 
             it('should return true: bottom left corner over top right corner', function() {
-              expect(new Collider().isIntersecting(mockObj(10, 10, 2, 4),
-                                                   mockObj(5, 14, 4, 2))).toEqual(false);
+              expect(
+                new Collider(within()).isIntersecting(
+                  mockObj(10, 10, 2, 4),
+                  mockObj(5, 14, 4, 2)
+                )
+              ).toEqual(false);
             });
 
             it('should return true: top left corner over bottom right corner', function() {
-              expect(new Collider().isIntersecting(mockObj(13, 14, 4, 2),
-                                                   mockObj(10, 10, 2, 4))).toEqual(false);
+              expect(
+                new Collider(within()).isIntersecting(
+                  mockObj(13, 14, 4, 2),
+                  mockObj(10, 10, 2, 4)
+                )
+              ).toEqual(false);
             });
 
             it('should return true: top right corner over bottom left corner', function() {
-              expect(new Collider().isIntersecting(mockObj(5, 14, 4, 2),
-                                                   mockObj(10, 10, 2, 4))).toEqual(false);
+              expect(
+                new Collider(within()).isIntersecting(
+                  mockObj(5, 14, 4, 2),
+                  mockObj(10, 10, 2, 4)
+                )
+              ).toEqual(false);
             });
           });
         });
 
         it('should return false for two circles that are not colliding', function() {
-          var collider = new Collider();
+          var collider = new Collider(within());
           var obj1 = mockObj(5, 5, 10, 10, collider.CIRCLE);
           var obj2 = mockObj(14, 14, 10, 10, collider.CIRCLE);
           var intersecting = collider.isIntersecting(obj1, obj2);
@@ -333,7 +367,7 @@ within("github.com/eric-brechemier/coquette", function() {
         });
 
         it('should return true for circ+rect that are colliding', function() {
-          var collider = new Collider();
+          var collider = new Collider(within());
           var obj1 = mockObj(5, 5, 10, 10, collider.CIRCLE);
           var obj2 = mockObj(14, 14, 10, 10, collider.RECTANGLE);
           var intersecting = collider.isIntersecting(obj1, obj2);
@@ -341,7 +375,7 @@ within("github.com/eric-brechemier/coquette", function() {
         });
 
         it('should return true for point+rect that are colliding', function() {
-          var collider = new Collider();
+          var collider = new Collider(within());
           var obj1 = mockObj(5, 5, 1, 1, collider.POINT);
           var obj2 = mockObj(0, 0, 10, 10, collider.RECTANGLE);
           var intersecting = collider.isIntersecting(obj1, obj2);
@@ -349,7 +383,7 @@ within("github.com/eric-brechemier/coquette", function() {
         });
 
         it('should return true for point+circ that are colliding', function() {
-          var collider = new Collider();
+          var collider = new Collider(within());
           var obj1 = mockObj(5, 5, 1, 1, collider.POINT);
           var obj2 = mockObj(0, 0, 10, 10, collider.CIRCLE);
           var intersecting = collider.isIntersecting(obj1, obj2);
@@ -357,7 +391,7 @@ within("github.com/eric-brechemier/coquette", function() {
         });
 
         it('should throw when either obj has invalid bounding box', function() {
-          var collider = new Collider();
+          var collider = new Collider(within());
 
           var obj1 = mockObj(5, 5, 1, 1, "la");
           var obj2 = mockObj(0, 0, 10, 10, collider.CIRCLE);
@@ -374,7 +408,7 @@ within("github.com/eric-brechemier/coquette", function() {
 
         describe('object ordering', function() {
           it('should only return true when circle+rect in right order to collide', function() {
-            var collider = new Collider();
+            var collider = new Collider(within());
 
             var obj1 = mockObj(33, 33, 10, 10, collider.CIRCLE);
             var obj2 = mockObj(5, 5, 30, 30, collider.RECTANGLE);
@@ -387,7 +421,7 @@ within("github.com/eric-brechemier/coquette", function() {
           });
 
           it('should only return true when point+rect in right order to collide', function() {
-            var collider = new Collider();
+            var collider = new Collider(within());
 
             var obj1 = mockObj(5, 5, 1, 1, collider.POINT);
             var obj2 = mockObj(0, 0, 10, 10, collider.RECTANGLE);
@@ -400,7 +434,7 @@ within("github.com/eric-brechemier/coquette", function() {
           });
 
           it('should only return true when point+circ in right order to collide', function() {
-            var collider = new Collider();
+            var collider = new Collider(within());
 
             var obj1 = mockObj(5, 5, 1, 1, collider.POINT);
             var obj2 = mockObj(0, 0, 10, 10, collider.CIRCLE);
@@ -424,10 +458,12 @@ within("github.com/eric-brechemier/coquette", function() {
         // creation.
 
         var MockCoquette = function() {
-          this.entities = new Entities(this);
-          this.runner = new Runner(this);
-          this.collider = new Collider(this);
-          this.renderer = new Renderer(this, {}, {
+          var space = within();
+          this.space = space;
+          this.entities = new Entities(space);
+          this.runner = new Runner(space);
+          this.collider = new Collider(space);
+          this.renderer = new Renderer(space, {}, {
             style: {},
             getContext: function() { }
           });

@@ -19,9 +19,11 @@ within("github.com/eric-brechemier/coquette", function() {
   };
 
   var MockCoquette = function() {
-    this.entities = new Entities(this);
-    this.runner = new Runner(this);
-    this.renderer = new Renderer(this, {}, new MockCanvas());
+    var space = within();
+    this.space = space;
+    this.entities = new Entities(space);
+    this.runner = new Runner(space);
+    this.renderer = new Renderer(space, {}, new MockCanvas());
   };
 
   describe('entities', function() {
@@ -84,7 +86,7 @@ within("github.com/eric-brechemier/coquette", function() {
 
     describe('view center position', function() {
       it('should default view top left to 0 0', function() {
-        var r = new Renderer(null, null, new MockCanvas(), 200, 100);
+        var r = new Renderer(within(), null, new MockCanvas(), 200, 100);
         expect({
           x: r.getViewCenterPos().x - r.getViewSize().x / 2,
           y: r.getViewCenterPos().y - r.getViewSize().y / 2
@@ -92,7 +94,7 @@ within("github.com/eric-brechemier/coquette", function() {
       });
 
       it('should be able to get view center with getViewCenterPos()', function() {
-        var r = new Renderer(null, null, new MockCanvas(), 200, 100);
+        var r = new Renderer(within(), null, new MockCanvas(), 200, 100);
         expect({
           x: r.getViewCenterPos().x - r.getViewSize().x / 2,
           y: r.getViewCenterPos().y - r.getViewSize().y / 2
@@ -101,13 +103,13 @@ within("github.com/eric-brechemier/coquette", function() {
 
       describe('setViewCenterPos()', function() {
         it('should be able to set view center', function() {
-          var r = new Renderer(null, null, new MockCanvas());
+          var r = new Renderer(within(), null, new MockCanvas());
           r.setViewCenterPos({ x: 10, y: 12 });
           expect(r.getViewCenterPos()).toEqual({ x: 10, y: 12 });
         });
 
         it('should make new obj to hold set pos', function() {
-          var r = new Renderer(null, null, new MockCanvas());
+          var r = new Renderer(within(), null, new MockCanvas());
           var newPos = { x: 10, y: 12 };
           r.setViewCenterPos(newPos);
           expect(r.getViewCenterPos()).toEqual({ x: 10, y: 12 });
@@ -119,33 +121,33 @@ within("github.com/eric-brechemier/coquette", function() {
 
     describe('getCtx()', function() {
       it('should return ctx', function() {
-        var r = new Renderer(null, null, new MockCanvas());
+        var r = new Renderer(within(), null, new MockCanvas());
         expect(r.getCtx() instanceof MockContext).toEqual(true);
       });
     });
 
     describe('background color', function() {
       it('should set background color to passed color', function() {
-        var r = new Renderer(null, null, new MockCanvas(), null, null, "#aaa");
+        var r = new Renderer(within(), null, new MockCanvas(), null, null, "#aaa");
         expect(r.backgroundColor).toEqual("#aaa");
       });
     });
 
     describe('view size', function() {
       it('should set view size to passed vals', function() {
-        var r = new Renderer(null, null, new MockCanvas(), 100, 200);
+        var r = new Renderer(within(), null, new MockCanvas(), 100, 200);
         expect(r.getViewSize()).toEqual({ x: 100, y: 200 });
       });
 
       it('should set width and height of canvas to passed view size', function() {
         var canvas = new MockCanvas();
-        var r = new Renderer(null, null, canvas, 100, 200);
+        var r = new Renderer(within(), null, canvas, 100, 200);
         expect(canvas.width).toEqual(100);
         expect(canvas.height).toEqual(200);
       });
 
       it('should be able to get view size with getViewSize()', function() {
-        var r = new Renderer(null, null, new MockCanvas(), 100, 200);
+        var r = new Renderer(within(), null, new MockCanvas(), 100, 200);
         expect(r.getViewSize()).toEqual({ x: 100, y: 200 });
       });
     });
@@ -163,7 +165,7 @@ within("github.com/eric-brechemier/coquette", function() {
         };
 
         expect(ran).toEqual(false);
-        new Renderer(null, null, new MockCanvas()).onScreen();
+        new Renderer(within(), null, new MockCanvas()).onScreen();
         expect(ran).toEqual(true);
       });
     });
