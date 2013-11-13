@@ -1,57 +1,89 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
-  function Inputter(space) {
+
+  var
+    SPACE = 32,
+    LEFT_ARROW: 37,
+    UP_ARROW: 38,
+    RIGHT_ARROW: 39,
+    DOWN_ARROW: 40;
+
+  function preventScrolling(e) {
+    var suppressedKeys = [
+      SPACE,
+      LEFT_ARROW,
+      UP_ARROW,
+      RIGHT_ARROW,
+      DOWN_ARROW
+    ];
+    for (var i = 0; i < suppressedKeys.length; i++) {
+      if(suppressedKeys[i] === e.keyCode) {
+        e.preventDefault();
+        return;
+      }
+    }
+  }
+
+  function suppressScrolling() {
+    // suppress scrolling
+    window.addEventListener("keydown", preventScrolling, false);
+  }
+
+  function configureCanvasFocus(space, suppressedKeys) {
     var
-      canvas = space.get("canvas"),
-      autoFocus = space.get("autoFocus");
-
-    this.space = space;
-    this._keyDownState = {};
-    this._keyPressedState = {};
-    var self = this;
-
-    // handle whether to autofocus on canvas, or not
+      autoFocus = space.get("autoFocus"),
+      canvas = space.get("canvas");
 
     var inputReceiverElement = window;
+    // handle whether to autofocus on canvas, or not
     if (autoFocus === false) {
       inputReceiverElement = canvas;
       // lets canvas get focus and get key events
-      inputReceiverElement.contentEditable = true;
-      this.suppressedKeys = [];
+      canvas.contentEditable = true;
     } else {
-      this.supressedKeys = [
-        this.SPACE,
-        this.LEFT_ARROW,
-        this.UP_ARROW,
-        this.RIGHT_ARROW,
-        this.DOWN_ARROW
-      ];
+      suppressScrolling();
+    }
+  }
 
-      // suppress scrolling
-      window.addEventListener("keydown", function(e) {
-        for (var i = 0; i < self.supressedKeys.length; i++) {
-          if(self.supressedKeys[i] === e.keyCode) {
-            e.preventDefault();
-            return;
-          }
-        }
-      }, false);
+  function configureKeyListeners(space, onKeyDown, onKeyUp) {
+    var
+      autoFocus = space.get("autoFocus"),
+      canvas = space.get("canvas"),
+      inputReceiverElement;
+
+    // handle whether to autofocus on canvas, or not
+    if (autoFocus === false) {
+      inputReceiverElement = canvas;
+    } else {
+      inputReceiverElement = window;
     }
 
     // set up key listeners
+    inputReceiverElement.addEventListener('keydown', onKeyDown, false);
+    inputReceiverElement.addEventListener('keyup', onKeyUp, false);
+  }
 
-    inputReceiverElement.addEventListener('keydown', function(e) {
+  function Inputter(space) {
+    this.space = space;
+    this._keyDownState = {};
+    this._keyPressedState = {};
+
+    var self = this;
+    function onKeyDown(e) {
       self._keyDownState[e.keyCode] = true;
       if (self._keyPressedState[e.keyCode] === undefined) { // start of new keypress
         self._keyPressedState[e.keyCode] = true; // register keypress in progress
       }
-    }, false);
+    }
 
-    inputReceiverElement.addEventListener('keyup', function(e) {
+    function onKeyUp(e) {
       self._keyDownState[e.keyCode] = false;
       if (self._keyPressedState[e.keyCode] === false) { // prev keypress over
         self._keyPressedState[e.keyCode] = undefined; // prep for keydown to start next press
       }
-    }, false);
+    }
+
+    configureCanvasFocus(space);
+    configureKeyListeners(space, onKeyDown, onKeyUp);
   };
 
   Inputter.prototype = {
