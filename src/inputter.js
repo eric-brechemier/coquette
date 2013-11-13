@@ -187,7 +187,6 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     BACK_SLASH: 220,
     CLOSE_SQUARE_BRACKET: 221,
     SINGLE_QUOTE: 222
-
   };
 
   Inputter.prototype.state = Inputter.prototype.down;
