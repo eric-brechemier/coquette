@@ -28,10 +28,12 @@ within("github.com/eric-brechemier/coquette", function() {
     describe('main collider obj', function() {
       var MockCoquette = function() {
         var space = within();
-        this.space = space;
-        this.entities = new Entities(space);
-        this.runner = new Runner(space);
-        this.collider = new Collider(space);
+        return space(function(){
+          this.entities = new Entities(space);
+          this.runner = new Runner(space);
+          this.collider = new Collider(space);
+          return this;
+        });
       };
 
       var Thing = function(__, settings) {
@@ -459,13 +461,15 @@ within("github.com/eric-brechemier/coquette", function() {
 
         var MockCoquette = function() {
           var space = within();
-          this.space = space;
-          this.entities = new Entities(space);
-          this.runner = new Runner(space);
-          this.collider = new Collider(space);
-          this.renderer = new Renderer(space, {}, {
-            style: {},
-            getContext: function() { }
+          return space(function(){
+            this.entities = new Entities(space);
+            this.runner = new Runner(space);
+            this.collider = new Collider(space);
+            this.renderer = new Renderer(space, {}, {
+              style: {},
+              getContext: function() { }
+            });
+            return this;
           });
         };
 

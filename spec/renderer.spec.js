@@ -20,10 +20,12 @@ within("github.com/eric-brechemier/coquette", function() {
 
   var MockCoquette = function() {
     var space = within();
-    this.space = space;
-    this.entities = new Entities(space);
-    this.runner = new Runner(space);
-    this.renderer = new Renderer(space, {}, new MockCanvas());
+    return space(function(){
+      this.entities = new Entities(space);
+      this.runner = new Runner(space);
+      this.renderer = new Renderer(space, {}, new MockCanvas());
+      return this;
+    });
   };
 
   describe('entities', function() {
