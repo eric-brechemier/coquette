@@ -3,7 +3,6 @@ require('../src/')
 within("github.com/eric-brechemier/coquette", function() {
   var
     Entities = this.Entities;
-    Runner = this.Runner;
     Collider = this.Collider;
 
   var MockCoquette = function() {
@@ -11,7 +10,6 @@ within("github.com/eric-brechemier/coquette", function() {
     return space(function(){
       this.game = "woo";
       this.entities = new Entities(space);
-      this.runner = new Runner(space);
       this.collider = new Collider(space);
       return this;
     });
@@ -57,21 +55,21 @@ within("github.com/eric-brechemier/coquette", function() {
       it('should create the thing you ask it to create', function() {
         var c = new MockCoquette();
         c.entities.create(Thing);
-        c.runner.update();
+        c.entities.space.publish("create-entities");
         expect(c.entities.all()[0] instanceof Thing).toEqual(true);
       });
 
       it('should be ok without passed settings ', function() {
         var c = new MockCoquette();
         c.entities.create(Thing);
-        c.runner.update();
+        c.entities.space.publish("create-entities");
         expect(c.entities.all().length).toEqual(1);
       });
 
       it('should be ok without passed callback', function() {
         var c = new MockCoquette();
         c.entities.create(Thing);
-        c.runner.update();
+        c.entities.space.publish("create-entities");
         expect(c.entities.all().length).toEqual(1);
       });
 
@@ -82,7 +80,7 @@ within("github.com/eric-brechemier/coquette", function() {
           expect(game).toEqual(c.game);
         };
         c.entities.create(Thing, { a:1 });
-        c.runner.update();
+        c.entities.space.publish("create-entities");
         expect(c.entities.all()[0].called).toEqual(true);
       });
 
@@ -93,7 +91,7 @@ within("github.com/eric-brechemier/coquette", function() {
           expect(settings).toEqual({ a:1 });
         };
         c.entities.create(Thing, { a:1 });
-        c.runner.update();
+        c.entities.space.publish("create-entities");
         expect(c.entities.all()[0].called).toEqual(true);
       });
 
@@ -103,7 +101,7 @@ within("github.com/eric-brechemier/coquette", function() {
         c.entities.create(Thing, { a:1 }, function() {
           called = true;
         });
-        c.runner.update();
+        c.entities.space.publish("create-entities");
         expect(called).toEqual(true);
       });
     });
@@ -112,10 +110,10 @@ within("github.com/eric-brechemier/coquette", function() {
       it('should destroy the thing you ask it to destroy', function() {
         var c = new MockCoquette();
         c.entities.create(Thing);
-        c.runner.update();
+        c.entities.space.publish("create-entities");
         expect(c.entities.all()[0] instanceof Thing).toEqual(true);
         c.entities.destroy(c.entities.all()[0]);
-        c.runner.update();
+        c.entities.space.publish("destroy-entities");
         expect(c.entities.all()[0]).toBeUndefined();
       });
 
@@ -123,12 +121,12 @@ within("github.com/eric-brechemier/coquette", function() {
         var c = new MockCoquette();
         var called = false;
         c.entities.create(Thing);
-        c.runner.update();
+        c.entities.space.publish("create-entities");
         expect(c.entities.all()[0] instanceof Thing).toEqual(true);
         c.entities.destroy(c.entities.all()[0], function() {
           called = true;
         });
-        c.runner.update();
+        c.entities.space.publish("destroy-entities");
         expect(called).toEqual(true);
       });
     });

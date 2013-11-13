@@ -9,7 +9,6 @@ var input = [
   src + 'within.js',
   src + 'collider.js',
   src + 'inputter.js',
-  src + 'runner.js',
   src + 'ticker.js',
   src + 'renderer.js',
   src + 'entities.js',

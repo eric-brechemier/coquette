@@ -5,7 +5,6 @@ within("github.com/eric-brechemier/coquette", function() {
     Renderer = this.Renderer,
     Collider = this.Collider,
     Entities = this.Entities,
-    Runner = this.Runner;
 
   var MockContext = function() {
     this.translate = function() {};
@@ -22,7 +21,6 @@ within("github.com/eric-brechemier/coquette", function() {
     var space = within();
     return space(function(){
       this.entities = new Entities(space);
-      this.runner = new Runner(space);
       this.game = {};
       this.canvas = new MockCanvas();
       this.renderer = new Renderer(space);
@@ -55,7 +53,7 @@ within("github.com/eric-brechemier/coquette", function() {
         coquette.entities.create(Entity, { zindex: 21, draw: recordDrawCall });
         coquette.entities.create(Entity, { zindex: 9, draw: recordDrawCall });
 
-        coquette.runner.update();
+        coquette.entities.space.publish("create-entities");
         coquette.renderer.update();
 
         expect(coquette.entities.all()[0].callOrder).toEqual(1);
@@ -77,7 +75,7 @@ within("github.com/eric-brechemier/coquette", function() {
         coquette.entities.create(Entity, { draw: recordDrawCall });
         coquette.entities.create(Entity, { zindex: 0, draw: recordDrawCall });
 
-        coquette.runner.update();
+        coquette.entities.space.publish("create-entities");
         coquette.renderer.update();
 
         expect(coquette.entities.all()[0].callOrder).toEqual(0);

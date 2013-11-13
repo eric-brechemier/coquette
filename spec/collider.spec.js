@@ -5,7 +5,6 @@ within("github.com/eric-brechemier/coquette", function() {
     Collider = this.Collider,
     Renderer = this.Renderer,
     Entities = this.Entities,
-    Runner = this.Runner,
     Maths = Collider.Maths;
 
   var mockObj = function(posX, posY, sizeX, sizeY, boundingBox) {
@@ -30,7 +29,6 @@ within("github.com/eric-brechemier/coquette", function() {
         var space = within();
         return space(function(){
           this.entities = new Entities(space);
-          this.runner = new Runner(space);
           this.collider = new Collider(space);
           return this;
         });
@@ -54,7 +52,7 @@ within("github.com/eric-brechemier/coquette", function() {
           c.entities.create(Thing, { id: 1 });
           c.entities.create(Thing, { id: 2 });
           c.entities.create(Thing, { id: 3 });
-          c.runner.update();
+          c.entities.space.publish("create-entities");
           c.collider.update();
           expect(comparisons.length).toEqual(6);
           expect(comparisons[0][0] === 0 && comparisons[0][1] === 1).toEqual(true);
@@ -73,7 +71,7 @@ within("github.com/eric-brechemier/coquette", function() {
           });
 
           c.entities.create(Thing, { id: 0 });
-          c.runner.update();
+          c.entities.space.publish("create-entities");
           c.collider.update();
           unmock();
         });
@@ -84,7 +82,7 @@ within("github.com/eric-brechemier/coquette", function() {
           var unmock = mock(c.collider, "isColliding", function() { return true; });
           c.entities.create(Thing, { uncollision: function() { uncollisions++; }});
           c.entities.create(Thing);
-          c.runner.update();
+          c.entities.space.publish("create-entities");
           c.collider.update();
           mock(c.collider, "isColliding", function() { return false; })
           c.collider.update();
@@ -98,7 +96,7 @@ within("github.com/eric-brechemier/coquette", function() {
           var unmock = mock(c.collider, "isColliding", function() { return true; });
           c.entities.create(Thing, { uncollision: function() { uncollisions++; }});
           c.entities.create(Thing);
-          c.runner.update();
+          c.entities.space.publish("create-entities");
           c.collider.update();
           mock(c.collider, "isColliding", function() { return false; })
           c.collider.update();
@@ -127,7 +125,7 @@ within("github.com/eric-brechemier/coquette", function() {
             }
           );
           c.entities.create(Thing);
-          c.runner.update();
+          c.entities.space.publish("create-entities");
           c.collider.update();
           expect(uncollisions).toEqual(0);
           c.collider.destroyEntity(entity1);
@@ -151,7 +149,7 @@ within("github.com/eric-brechemier/coquette", function() {
               entity1 = newEntity;
             }
           );
-          c.runner.update();
+          c.entities.space.publish("create-entities");
           c.collider.update();
           c.collider.destroyEntity(entity1);
           expect(uncollisions).toEqual(0);
@@ -174,7 +172,7 @@ within("github.com/eric-brechemier/coquette", function() {
             }
           });
           c.entities.create(Thing);
-          c.runner.update();
+          c.entities.space.publish("create-entities");
           c.collider.update();
           c.collider.update();
           c.collider.update();
@@ -196,7 +194,7 @@ within("github.com/eric-brechemier/coquette", function() {
             }
           });
           c.entities.create(Thing);
-          c.runner.update();
+          c.entities.space.publish("create-entities");
           c.collider.update();
           expect(initial).toEqual(1);
           unmock();
@@ -216,7 +214,7 @@ within("github.com/eric-brechemier/coquette", function() {
             }
           });
           c.entities.create(Thing);
-          c.runner.update();
+          c.entities.space.publish("create-entities");
           c.collider.update();
           c.collider.update();
           c.collider.update();
@@ -485,7 +483,6 @@ within("github.com/eric-brechemier/coquette", function() {
           var space = within();
           return space(function(){
             this.entities = new Entities(space);
-            this.runner = new Runner(space);
             this.collider = new Collider(space);
             this.game = {};
             this.canvas = {
@@ -516,7 +513,7 @@ within("github.com/eric-brechemier/coquette", function() {
         }
         c.entities.create(Entity, { zindex: 0, id: 0 }, setEntity1);
         c.entities.create(Entity, { zindex: 0, id: 1 }, setEntity2);
-        c.runner.update();
+        c.entities.space.publish("create-entities");
         expect(c.entities.all()[0]).toEqual(entity1);
         expect(c.entities.all()[1]).toEqual(entity2);
 
@@ -531,7 +528,7 @@ within("github.com/eric-brechemier/coquette", function() {
         c = new MockCoquette();
         c.entities.create(Entity, { zindex: 1 }, setEntity1);
         c.entities.create(Entity, { zindex: 0 }, setEntity2);
-        c.runner.update();
+        c.entities.space.publish("create-entities");
         expect(c.entities.all()[0]).toEqual(entity1);
         expect(c.entities.all()[1]).toEqual(entity2);
 
@@ -549,7 +546,7 @@ within("github.com/eric-brechemier/coquette", function() {
         }, setEntity1);
         c.entities.create(Entity, {}, setEntity2);
 
-        c.runner.update();
+        c.entities.space.publish("create-entities");
 
         var restoreIsIntersecting = mock(c.collider, 'isColliding', function() {
           return true;
