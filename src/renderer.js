@@ -21,7 +21,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     configureCanvas(space);
     initCanvasContext(space);
 
-    viewSize = this.getViewSize();
+    var viewSize = this.getViewSize();
     this.viewCenterPos = { x: viewSize.x / 2, y: viewSize.y / 2 };
   };
 
