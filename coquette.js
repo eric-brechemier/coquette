@@ -1,11 +1,13 @@
 // https://github.com/eric-brechemier/within (License: CC0)
+//
 // within is a factory of semi-private spaces
-// where properties and events can be shared.
+// where properties and events can be shared
+// in isolation.
 //
 // Usage:
 //
 //   // Run code within a module
-//   within( "your.domain/path", function( get, set, publish, subscribe ) {
+//   within( "your.domain/path", function( publish, subscribe, get, set ) {
 //     // semi-private space
 //   });
 //
@@ -85,20 +87,25 @@ privately(function() {
       name - string, optional, name of the symbolic space:
              a domain name and path that you control on the Web.
              Example: "github.com/eric-brechemier/within/tests/module1"
-      callback - function( get, set, publish, subscribe ), optional, function
-                 called immediately in the context ('this') of the module data
-                 object with four functions as arguments to share properties
-                 and events within this module (described separately below).
+      callback - function( publish, subscribe, get, set ), optional, function
+                 called immediately in the context ('this') of the space data
+                 object with four functions (described separately below) as
+                 arguments to share events and properties within the space.
 
     Returns:
       any, the value returned by the callback function,
-      or an object with the four methods get, set, publish, subscribe
-      to interact with the module data when the callback function is omitted.
-      When no name is provided, an anonymous module is created for single use.
+      or a space function with the four methods publish, subscribe, get, set,
+      to interact with the space data when the callback function is omitted;
+      the space function can then be called at any point with the same kind
+      of callback function described above to run code within the space.
+      When no name is provided, an anonymous module is created for single use,
+      for which no reference is kept in the internal space factory.
   */
   function within( name, callback ) {
     var
+      // data space - object(string -> any), set of properties
       dataSpace,
+      // event space - object(string -> array of functions), event listeners
       eventSpace;
 
     if ( no( name ) ) {
@@ -203,24 +210,42 @@ privately(function() {
       };
     }
 
-    if ( arguments.length < 2 ) {
-      return {
-        get: get,
-        set: set,
-        publish: publish,
-        subscribe: subscribe
-      };
+    /*
+      Function: space( callback ): any
+      Run code in the given space
+
+      Parameter:
+        callback - function( publish, subscribe, get, set ), optional, function
+                   called immediately in the context ('this') of the space data
+                   object with four functions (described above) as arguments to
+                   share events and properties within the space.
+
+      Returns:
+        any, the value returned by the callback function,
+        or undefined
+    */
+    function space( callback ) {
+      return callback.apply( dataSpace, [ publish, subscribe, get, set ] );
     }
 
-    return callback.apply( dataSpace, [ get, set, publish, subscribe ] );
+    if ( arguments.length < 2 ) {
+      space.publish = publish;
+      space.subscribe = subscribe;
+      space.get = get;
+      space.set = set;
+      return space;
+    }
+
+    return space( callback );
   }
 
+  // export to global 'this'
   this.within = within;
 });
 
-within("github.com/eric-brechemier/coquette", function() {
-  var Collider = function(coquette) {
-    this.coquette = coquette;
+within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
+  function Collider(space) {
+    this.space = space;
   };
 
   // if no entities have uncollision(), skip expensive record keeping for uncollisions
@@ -241,7 +266,7 @@ within("github.com/eric-brechemier/coquette", function() {
     collideRecords: [],
 
     update: function() {
-      var ent = this.coquette.entities.all();
+      var ent = this.space.get("entities").all();
       for (var i = 0, len = ent.length; i < len; i++) {
         for (var j = i + 1; j < len; j++) {
           if (this.isColliding(ent[i], ent[j])) {
@@ -255,7 +280,7 @@ within("github.com/eric-brechemier/coquette", function() {
 
     collision: function(entity1, entity2) {
       var collisionType;
-      if (!isUncollisionOn(this.coquette.entities.all())) {
+      if (!isUncollisionOn(this.space.get("entities").all())) {
         collisionType = this.INITIAL;
       } else if (this.getCollideRecordIds(entity1, entity2).length === 0) {
         this.collideRecords.push([entity1, entity2]);
@@ -493,76 +518,129 @@ within("github.com/eric-brechemier/coquette", function() {
     },
   };
 
+  subscribe("create-game", function(space) {
+    space(function(){
+      var collider = new Collider(space);
+
+      space.subscribe("after-entities-update", function() {
+        collider.update();
+      });
+
+      this.collider = collider;
+    });
+  });
+
   this.Collider = Collider;
   this.Collider.Maths = Maths;
 });
 
-within("github.com/eric-brechemier/coquette", function() {
-  var Inputter = function(coquette, canvas, autoFocus) {
-    this.coquette = coquette;
-    this._keyDownState = {};
-    this._keyPressedState = {};
-    var self = this;
+within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
-    // handle whether to autofocus on canvas, or not
+  var
+    SPACE = 32,
+    LEFT_ARROW = 37,
+    UP_ARROW = 38,
+    RIGHT_ARROW = 39,
+    DOWN_ARROW = 40;
+
+  function preventScrolling(e) {
+    var suppressedKeys = [
+      SPACE,
+      LEFT_ARROW,
+      UP_ARROW,
+      RIGHT_ARROW,
+      DOWN_ARROW
+    ];
+    for (var i = 0; i < suppressedKeys.length; i++) {
+      if(suppressedKeys[i] === e.keyCode) {
+        e.preventDefault();
+        return;
+      }
+    }
+  }
+
+  function suppressScrolling() {
+    // suppress scrolling
+    window.addEventListener("keydown", preventScrolling, false);
+  }
+
+  function configureCanvasFocus(space, suppressedKeys) {
+    var
+      autoFocus = space.get("autoFocus"),
+      canvas = space.get("canvas");
 
     var inputReceiverElement = window;
+    // handle whether to autofocus on canvas, or not
     if (autoFocus === false) {
       inputReceiverElement = canvas;
-      inputReceiverElement.contentEditable = true; // lets canvas get focus and get key events
-      this.suppressedKeys = [];
+      // lets canvas get focus and get key events
+      canvas.contentEditable = true;
     } else {
-      this.supressedKeys = [
-        this.SPACE,
-        this.LEFT_ARROW,
-        this.UP_ARROW,
-        this.RIGHT_ARROW,
-        this.DOWN_ARROW
-      ];
+      suppressScrolling();
+    }
+  }
 
-      // suppress scrolling
-      window.addEventListener("keydown", function(e) {
-        for (var i = 0; i < self.supressedKeys.length; i++) {
-          if(self.supressedKeys[i] === e.keyCode) {
-            e.preventDefault();
-            return;
-          }
-        }
-      }, false);
+  function configureKeyListeners(space, onKeyDown, onKeyUp) {
+    var
+      autoFocus = space.get("autoFocus"),
+      canvas = space.get("canvas"),
+      inputReceiverElement;
+
+    // handle whether to autofocus on canvas, or not
+    if (autoFocus === false) {
+      inputReceiverElement = canvas;
+    } else {
+      inputReceiverElement = window;
     }
 
     // set up key listeners
+    inputReceiverElement.addEventListener('keydown', onKeyDown, false);
+    inputReceiverElement.addEventListener('keyup', onKeyUp, false);
+  }
 
-    inputReceiverElement.addEventListener('keydown', function(e) {
-      self._keyDownState[e.keyCode] = true;
-      if (self._keyPressedState[e.keyCode] === undefined) { // start of new keypress
-        self._keyPressedState[e.keyCode] = true; // register keypress in progress
-      }
-    }, false);
+  function Inputter(space) {
+    var
+      keyDownState = {},
+      keyPressedState = {};
 
-    inputReceiverElement.addEventListener('keyup', function(e) {
-      self._keyDownState[e.keyCode] = false;
-      if (self._keyPressedState[e.keyCode] === false) { // prev keypress over
-        self._keyPressedState[e.keyCode] = undefined; // prep for keydown to start next press
+    this.space = space;
+    space.set("keyDownState", keyDownState);
+    space.set('keyPressedState', keyPressedState)
+
+    function onKeyDown(e) {
+      keyDownState[e.keyCode] = true;
+      if (keyPressedState[e.keyCode] === undefined) { // start of new keypress
+        keyPressedState[e.keyCode] = true; // register keypress in progress
       }
-    }, false);
-  };
+    }
+
+    function onKeyUp(e) {
+      keyDownState[e.keyCode] = false;
+      if (keyPressedState[e.keyCode] === false) { // prev keypress over
+        keyPressedState[e.keyCode] = undefined; // prep for keydown to start next press
+      }
+    }
+
+    configureCanvasFocus(space);
+    configureKeyListeners(space, onKeyDown, onKeyUp);
+  }
 
   Inputter.prototype = {
     update: function() {
-      for (var i in this._keyPressedState) {
-        if (this._keyPressedState[i] === true) { // tick passed and press event in progress
-          this._keyPressedState[i] = false; // end key press
+      var keyPressedState = this.space.get('keyPressedState');
+      for (var i in keyPressedState) {
+        if (keyPressedState[i] === true) { // tick passed and press event in progress
+          keyPressedState[i] = false; // end key press
         }
       }
     },
 
     down: function(keyCode) {
-      return this._keyDownState[keyCode] || false;
+      return this.space.get('keyDownState')[keyCode] || false;
     },
 
     pressed: function(keyCode) {
-      return this._keyPressedState[keyCode] || false;
+      return this.space.get('keyPressedState')[keyCode] || false;
     },
 
     BACKSPACE: 8,
@@ -646,47 +724,28 @@ within("github.com/eric-brechemier/coquette", function() {
     BACK_SLASH: 220,
     CLOSE_SQUARE_BRACKET: 221,
     SINGLE_QUOTE: 222
-
   };
 
   Inputter.prototype.state = Inputter.prototype.down;
 
+  subscribe("create-game", function(space) {
+    space(function(){
+      var inputter = new Inputter(space);
+
+      space.subscribe("after-display-update", function(){
+        inputter.update();
+      });
+
+      this.inputter = inputter;
+    });
+  });
+
   this.Inputter = Inputter;
 });
 
-within("github.com/eric-brechemier/coquette", function() {
-  function Runner(coquette) {
-    this.coquette = coquette;
-    this.runs = [];
-  };
+within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
-  Runner.prototype = {
-    update: function() {
-      this.run();
-    },
-
-    run: function() {
-      while(this.runs.length > 0) {
-        var run = this.runs.shift();
-        run.fn(run.obj);
-      }
-    },
-
-    add: function(obj, fn) {
-      this.runs.push({
-        obj: obj,
-        fn: fn
-      });
-    }
-  };
-
-  this.Runner = Runner;
-});
-
-within("github.com/eric-brechemier/coquette", function() {
-  var interval = 16;
-
-  function Ticker(coquette, gameLoop) {
+  function Ticker(gameLoop) {
     setupRequestAnimationFrame();
 
     var nextTickFn;
@@ -724,8 +783,9 @@ within("github.com/eric-brechemier/coquette", function() {
 
     if (!window.requestAnimationFrame) {
       window.requestAnimationFrame = function(callback, element) {
+        var INTERVAL = 16;
         var currTime = new Date().getTime();
-        var timeToCall = Math.max(0, interval - (currTime - lastTime));
+        var timeToCall = Math.max(0, INTERVAL - (currTime - lastTime));
         var id = window.setTimeout(function() { callback(currTime + timeToCall); },
                                    timeToCall);
         lastTime = currTime + timeToCall;
@@ -740,61 +800,101 @@ within("github.com/eric-brechemier/coquette", function() {
     }
   };
 
+  subscribe("game-created", function(space) {
+    space(function(){
+      this.ticker = new Ticker(function(interval) {
+        space.publish("tick", interval);
+      });
+    });
+  });
+
   this.Ticker = Ticker;
 });
 
-within("github.com/eric-brechemier/coquette", function() {
+within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   var Maths = this.Collider.Maths;
 
-  var Renderer = function(coquette, game, canvas, wView, hView, backgroundColor) {
-    this.coquette = coquette;
-    this.game = game;
-    canvas.style.outline = "none"; // stop browser outlining canvas when it has focus
-    canvas.style.cursor = "default"; // keep pointer normal when hovering over canvas
-    this.ctx = canvas.getContext('2d');
-    this.backgroundColor = backgroundColor;
+  function configureCanvas(space) {
+    var canvas = space.get("canvas");
+    // stop browser outlining canvas when it has focus
+    canvas.style.outline = "none";
+    // keep pointer normal when hovering over canvas
+    canvas.style.cursor = "default";
+    canvas.width = space.get("width");
+    canvas.height = space.get("height");
+  }
 
-    canvas.width = wView;
-    canvas.height = hView;
-    this.viewSize = { x:wView, y:hView };
-    this.viewCenterPos = { x: this.viewSize.x / 2, y: this.viewSize.y / 2 };
+  function initCanvasContext(space) {
+    var canvas = space.get("canvas");
+    space.set("canvasContext", canvas.getContext('2d'));
+  }
+
+  function centerView(space) {
+    var
+      width = space.get("width"),
+      height = space.get("height");
+    space.set("viewCenterX", width / 2);
+    space.set("viewCenterY", height / 2);
+  }
+
+  function Renderer(space) {
+    this.space = space;
+    configureCanvas(space);
+    initCanvasContext(space);
+    centerView(space);
   };
 
   Renderer.prototype = {
     getCtx: function() {
-      return this.ctx;
+      return this.space.get("canvasContext");
+    },
+
+    getBackgroundColor: function() {
+      return this.space.get("backgroundColor");
     },
 
     getViewSize: function() {
-      return this.viewSize;
+      return {
+        x: this.space.get("width"),
+        y: this.space.get("height")
+      };
     },
 
     getViewCenterPos: function() {
-      return this.viewCenterPos;
+      return {
+        x: this.space.get("viewCenterX"),
+        y: this.space.get("viewCenterY")
+      };
     },
 
     setViewCenterPos: function(pos) {
-      this.viewCenterPos = { x:pos.x, y:pos.y };
+      this.space.set("viewCenterX", pos.x);
+      this.space.set("viewCenterY", pos.y);
     },
 
-    update: function(interval) {
-      var ctx = this.getCtx();
+    update: function() {
+      var
+        ctx = this.getCtx(),
+        game = this.space.get("game"),
+        gameEntities = this.space.get("entities").all();
 
-      var viewTranslate = viewOffset(this.viewCenterPos, this.viewSize);
+      var
+        viewSize = this.getViewSize(),
+        viewCenterPos = this.getViewCenterPos(),
+        viewTranslate = viewOffset(viewCenterPos, viewSize);
 
       // translate so all objs placed relative to viewport
       ctx.translate(-viewTranslate.x, -viewTranslate.y);
 
       // draw background
-      ctx.fillStyle = this.backgroundColor;
-      ctx.fillRect(this.viewCenterPos.x - this.viewSize.x / 2,
-                   this.viewCenterPos.y - this.viewSize.y / 2,
-                   this.viewSize.x,
-                   this.viewSize.y);
+      ctx.fillStyle = this.getBackgroundColor();
+      ctx.fillRect(viewCenterPos.x - viewSize.x / 2,
+                   viewCenterPos.y - viewSize.y / 2,
+                   viewSize.x,
+                   viewSize.y);
 
       // draw game and entities
-      var drawables = [this.game]
-        .concat(this.coquette.entities.all().concat().sort(zindexSort));
+      var drawables = [game].concat(gameEntities.concat().sort(zindexSort));
       for (var i = 0, len = drawables.length; i < len; i++) {
         if (drawables[i].draw !== undefined) {
           drawables[i].draw(ctx);
@@ -806,11 +906,14 @@ within("github.com/eric-brechemier/coquette", function() {
     },
 
     onScreen: function(obj) {
+      var
+        viewSize = this.getViewSize(),
+        viewCenterPos = this.getViewCenterPos();
       return Maths.rectanglesIntersecting(obj, {
-        size: this.viewSize,
+        size: viewSize,
         pos: {
-          x: this.viewCenterPos.x - this.viewSize.x / 2,
-          y: this.viewCenterPos.y - this.viewSize.y / 2
+          x: viewCenterPos.x - viewSize.x / 2,
+          y: viewCenterPos.y - viewSize.y / 2
         }
       });
     }
@@ -818,8 +921,8 @@ within("github.com/eric-brechemier/coquette", function() {
 
   var viewOffset = function(viewCenterPos, viewSize) {
     return {
-      x:viewCenterPos.x - viewSize.x / 2,
-      y:viewCenterPos.y - viewSize.y / 2
+      x: viewCenterPos.x - viewSize.x / 2,
+      y: viewCenterPos.y - viewSize.y / 2
     }
   };
 
@@ -829,15 +932,40 @@ within("github.com/eric-brechemier/coquette", function() {
     return (a.zindex || 0) < (b.zindex || 0) ? -1 : 1;
   };
 
+  subscribe("create-game", function(space) {
+    space(function(){
+      var renderer = new Renderer(space);
+
+      space.subscribe("update-display", function() {
+        renderer.update();
+      });
+
+      this.renderer = renderer;
+    });
+  });
+
   this.Renderer = Renderer;
 });
 
-within("github.com/eric-brechemier/coquette", function() {
-  function Entities(coquette, game) {
-    this.coquette = coquette;
-    this.game = game;
-    this._entities = [];
+within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
+  function Entities(space) {
+    this.space = space;
+    space.set("gameEntities", []);
   };
+
+  // fire the callback just once, the *next* time the event is published
+  function runOnce(space, event, callback) {
+    var
+      isReady = false,
+      unsubscribe = space.subscribe(event, function() {
+      if ( !isReady ){
+        return; // skip immediate callback when the property is already set
+      }
+      unsubscribe(); // fire only once
+      return callback.apply(this, arguments);
+    });
+    isReady = true;
+  }
 
   Entities.prototype = {
     update: function(interval) {
@@ -850,13 +978,14 @@ within("github.com/eric-brechemier/coquette", function() {
     },
 
     all: function(Constructor) {
+      var gameEntities = this.space.get("gameEntities");
       if (Constructor === undefined) {
-        return this._entities;
+        return gameEntities;
       } else {
         var entities = [];
-        for (var i = 0; i < this._entities.length; i++) {
-          if (this._entities[i] instanceof Constructor) {
-            entities.push(this._entities[i]);
+        for (var i = 0; i < gameEntities.length; i++) {
+          if (gameEntities[i] instanceof Constructor) {
+            entities.push(gameEntities[i]);
           }
         }
 
@@ -865,10 +994,14 @@ within("github.com/eric-brechemier/coquette", function() {
     },
 
     create: function(clazz, settings, callback) {
-      var self = this;
-      this.coquette.runner.add(this, function(entities) {
-        var entity = new clazz(self.game, settings || {});
-        entities._entities.push(entity);
+      var
+        space = this.space,
+        game = space.get("game"),
+        gameEntities = space.get("gameEntities");
+
+      runOnce(space, "create-entities", function(){
+        var entity = new clazz(game, settings || {});
+        gameEntities.push(entity);
         if (callback !== undefined) {
           callback(entity);
         }
@@ -876,12 +1009,15 @@ within("github.com/eric-brechemier/coquette", function() {
     },
 
     destroy: function(entity, callback) {
-      var self = this;
-      this.coquette.runner.add(this, function(entities) {
-        for(var i = 0; i < entities._entities.length; i++) {
-          if(entities._entities[i] === entity) {
-            self.coquette.collider.destroyEntity(entity);
-            entities._entities.splice(i, 1);
+      var
+        space = this.space,
+        gameEntities = space.get("gameEntities");
+
+      runOnce(space, "destroy-entities", function(){
+        for(var i = 0; i < gameEntities.length; i++) {
+          if(gameEntities[i] === entity) {
+            space.get("collider").destroyEntity(entity);
+            gameEntities.splice(i, 1);
             if (callback !== undefined) {
               callback();
             }
@@ -892,40 +1028,70 @@ within("github.com/eric-brechemier/coquette", function() {
     }
   };
 
+  subscribe("create-game", function(space) {
+    space(function(){
+      var entities = new Entities(space);
+
+      space.subscribe("before-entities-update", function() {
+        space.publish("create-entities");
+        space.publish("destroy-entities");
+      });
+
+      space.subscribe("update-entities", function(interval) {
+        entities.update(interval);
+      });
+
+      this.entities = entities;
+    });
+  });
+
   this.Entities = Entities;
 });
 
-this.Coquette = within("github.com/eric-brechemier/coquette", function() {
-  var
-    Renderer = this.Renderer,
-    Inputter = this.Inputter,
-    Entities = this.Entities,
-    Runner = this.Runner,
-    Collider = this.Collider,
-    Ticker = this.Ticker;
+this.Coquette = within(
+  "github.com/eric-brechemier/coquette",
+  function(publish, subscribe) {
 
-  var Coquette = function(game, canvasId, width, height, backgroundColor, autoFocus) {
-    var canvas = document.getElementById(canvasId);
-    this.renderer = new Renderer(this, game, canvas, width, height, backgroundColor);
-    this.inputter = new Inputter(this, canvas, autoFocus);
-    this.entities = new Entities(this, game);
-    this.runner = new Runner(this);
-    this.collider = new Collider(this);
+    function Coquette(
+      game, canvasId, width, height, backgroundColor, autoFocus
+    ) {
+      var space = within();
 
-    var self = this;
-    this.ticker = new Ticker(this, function(interval) {
-      self.collider.update(interval);
-      self.runner.update(interval);
-      if (game.update !== undefined) {
-        game.update(interval);
-      }
+      space.subscribe("tick", function(interval) {
+        space.publish("before-entities-update", interval);
+        space.publish("update-entities", interval);
+        space.publish("after-entities-update", interval);
 
-      self.entities.update(interval)
-      self.renderer.update(interval);
-      self.inputter.update();
-    });
-  };
+        space.publish("before-game-update", interval);
+        space.publish("update-game", interval);
+        space.publish("after-game-update", interval);
 
-  return Coquette;
-});
+        space.publish("before-display-update", interval);
+        space.publish("update-display", interval);
+        space.publish("after-display-update", interval);
+      });
+
+      space.subscribe("update-game", function(interval) {
+        if (game.update !== undefined) {
+          game.update(interval);
+        }
+      });
+
+      return space(function() {
+        this.game = game;
+        this.canvas = document.getElementById(canvasId);
+        this.width = width;
+        this.height = height;
+        this.backgroundColor = backgroundColor;
+        this.autoFocus = autoFocus;
+
+        publish("create-game", space);
+        publish("game-created", space);
+        return this;
+      });
+    };
+
+    return Coquette;
+  }
+);
 
