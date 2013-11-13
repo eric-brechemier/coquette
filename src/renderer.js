@@ -1,6 +1,16 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   var Maths = this.Collider.Maths;
 
+  function configureCanvas(space) {
+    var canvas = space.get("canvas");
+    // stop browser outlining canvas when it has focus
+    canvas.style.outline = "none";
+    // keep pointer normal when hovering over canvas
+    canvas.style.cursor = "default";
+    canvas.width = space.get("width");
+    canvas.height = space.get("height");
+  }
+
   function Renderer(space) {
     var
       game = space.get("game"),
@@ -9,12 +19,9 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
       hView = space.get("height");
 
     this.space = space;
-    canvas.style.outline = "none"; // stop browser outlining canvas when it has focus
-    canvas.style.cursor = "default"; // keep pointer normal when hovering over canvas
+    configureCanvas(space);
     this.ctx = canvas.getContext('2d');
 
-    canvas.width = wView;
-    canvas.height = hView;
     this.viewSize = { x:wView, y:hView };
     this.viewCenterPos = { x: this.viewSize.x / 2, y: this.viewSize.y / 2 };
   };
