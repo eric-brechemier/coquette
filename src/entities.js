@@ -1,7 +1,7 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   function Entities(space) {
     this.space = space;
-    this._entities = [];
+    space.set("gameEntities", []);
   };
 
   Entities.prototype = {
@@ -15,13 +15,14 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     },
 
     all: function(Constructor) {
+      var gameEntities = this.space.get("gameEntities");
       if (Constructor === undefined) {
-        return this._entities;
+        return gameEntities;
       } else {
         var entities = [];
-        for (var i = 0; i < this._entities.length; i++) {
-          if (this._entities[i] instanceof Constructor) {
-            entities.push(this._entities[i]);
+        for (var i = 0; i < gameEntities.length; i++) {
+          if (gameEntities[i] instanceof Constructor) {
+            entities.push(gameEntities[i]);
           }
         }
 
@@ -30,10 +31,13 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     },
 
     create: function(clazz, settings, callback) {
-      var game = this.space.get("game");
-      this.space.get("runner").add(this, function(entities) {
+      var
+        space = this.space,
+        game = space.get("game"),
+        gameEntities = space.get("gameEntities");
+      space.get("runner").add(this, function(entities) {
         var entity = new clazz(game, settings || {});
-        entities._entities.push(entity);
+        gameEntities.push(entity);
         if (callback !== undefined) {
           callback(entity);
         }
@@ -41,12 +45,14 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     },
 
     destroy: function(entity, callback) {
-      var self = this;
-      this.space.get("runner").add(this, function(entities) {
-        for(var i = 0; i < entities._entities.length; i++) {
-          if(entities._entities[i] === entity) {
-            self.space.get("collider").destroyEntity(entity);
-            entities._entities.splice(i, 1);
+      var
+        space = this.space,
+        gameEntities = space.get("gameEntities");
+      space.get("runner").add(this, function(entities) {
+        for(var i = 0; i < gameEntities.length; i++) {
+          if(gameEntities[i] === entity) {
+            space.get("collider").destroyEntity(entity);
+            gameEntities.splice(i, 1);
             if (callback !== undefined) {
               callback();
             }
