@@ -16,13 +16,19 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     space.set("canvasContext", canvas.getContext('2d'));
   }
 
+  function centerView(space) {
+    var
+      width = space.get("width"),
+      height = space.get("height");
+    space.set("viewCenterX", width / 2);
+    space.set("viewCenterY", height / 2);
+  }
+
   function Renderer(space) {
     this.space = space;
     configureCanvas(space);
     initCanvasContext(space);
-
-    var viewSize = this.getViewSize();
-    this.viewCenterPos = { x: viewSize.x / 2, y: viewSize.y / 2 };
+    centerView(space);
   };
 
   Renderer.prototype = {
@@ -42,11 +48,15 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     },
 
     getViewCenterPos: function() {
-      return this.viewCenterPos;
+      return {
+        x: this.space.get("viewCenterX"),
+        y: this.space.get("viewCenterY")
+      };
     },
 
     setViewCenterPos: function(pos) {
-      this.viewCenterPos = { x:pos.x, y:pos.y };
+      this.space.set("viewCenterX", pos.x);
+      this.space.set("viewCenterY", pos.y);
     },
 
     update: function() {
@@ -57,15 +67,16 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
       var
         viewSize = this.getViewSize(),
-        viewTranslate = viewOffset(this.viewCenterPos, viewSize);
+        viewCenterPos = this.getViewCenterPos(),
+        viewTranslate = viewOffset(viewCenterPos, viewSize);
 
       // translate so all objs placed relative to viewport
       ctx.translate(-viewTranslate.x, -viewTranslate.y);
 
       // draw background
       ctx.fillStyle = this.getBackgroundColor();
-      ctx.fillRect(this.viewCenterPos.x - viewSize.x / 2,
-                   this.viewCenterPos.y - viewSize.y / 2,
+      ctx.fillRect(viewCenterPos.x - viewSize.x / 2,
+                   viewCenterPos.y - viewSize.y / 2,
                    viewSize.x,
                    viewSize.y);
 
@@ -82,12 +93,14 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     },
 
     onScreen: function(obj) {
-      var viewSize = this.getViewSize();
+      var
+        viewSize = this.getViewSize(),
+        viewCenterPos = this.getViewCenterPos();
       return Maths.rectanglesIntersecting(obj, {
         size: viewSize,
         pos: {
-          x: this.viewCenterPos.x - viewSize.x / 2,
-          y: this.viewCenterPos.y - viewSize.y / 2
+          x: viewCenterPos.x - viewSize.x / 2,
+          y: viewCenterPos.y - viewSize.y / 2
         }
       });
     }
