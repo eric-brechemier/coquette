@@ -6,15 +6,13 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
       game = space.get("game"),
       canvas = space.get("canvas"),
       wView = space.get("width"),
-      hView = space.get("height"),
-      backgroundColor = space.get("backgroundColor");
+      hView = space.get("height");
 
     this.space = space;
     this.game = game;
     canvas.style.outline = "none"; // stop browser outlining canvas when it has focus
     canvas.style.cursor = "default"; // keep pointer normal when hovering over canvas
     this.ctx = canvas.getContext('2d');
-    this.backgroundColor = backgroundColor;
 
     canvas.width = wView;
     canvas.height = hView;
@@ -28,7 +26,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     },
 
     getBackgroundColor: function() {
-      return this.backgroundColor;
+      return this.space.get("backgroundColor");
     },
 
     getViewSize: function() {
@@ -52,7 +50,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
       ctx.translate(-viewTranslate.x, -viewTranslate.y);
 
       // draw background
-      ctx.fillStyle = this.backgroundColor;
+      ctx.fillStyle = this.getBackgroundColor();
       ctx.fillRect(this.viewCenterPos.x - this.viewSize.x / 2,
                    this.viewCenterPos.y - this.viewSize.y / 2,
                    this.viewSize.x,
