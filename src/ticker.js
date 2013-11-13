@@ -1,5 +1,4 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
-  var interval = 16;
 
   function Ticker(gameLoop) {
     setupRequestAnimationFrame();
@@ -39,8 +38,9 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
     if (!window.requestAnimationFrame) {
       window.requestAnimationFrame = function(callback, element) {
+        var INTERVAL = 16;
         var currTime = new Date().getTime();
-        var timeToCall = Math.max(0, interval - (currTime - lastTime));
+        var timeToCall = Math.max(0, INTERVAL - (currTime - lastTime));
         var id = window.setTimeout(function() { callback(currTime + timeToCall); },
                                    timeToCall);
         lastTime = currTime + timeToCall;
