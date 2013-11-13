@@ -114,12 +114,23 @@ within("github.com/eric-brechemier/coquette", function() {
           var c = new MockCoquette();
           var uncollisions = 0;
           var unmock = mock(c.collider, "isColliding", function() { return true; });
-          c.entities.create(Thing, { uncollision: function() { uncollisions++; }});
+          var entity1;
+          c.entities.create(
+            Thing,
+            {
+              uncollision: function() {
+                uncollisions++;
+              }
+            },
+            function(newEntity) {
+              entity1 = newEntity;
+            }
+          );
           c.entities.create(Thing);
           c.runner.update();
           c.collider.update();
           expect(uncollisions).toEqual(0);
-          c.collider.destroyEntity(c.entities._entities[0]);
+          c.collider.destroyEntity(entity1);
           expect(uncollisions).toEqual(1);
           unmock();
         });
@@ -128,10 +139,21 @@ within("github.com/eric-brechemier/coquette", function() {
           var c = new MockCoquette();
           var uncollisions = 0;
           var unmock = mock(c.collider, "isColliding", function() { return false; });
-          c.entities.create(Thing, { uncollision: function() { uncollisions++; }});
+          var entity1;
+          c.entities.create(
+            Thing,
+            {
+              uncollision: function() {
+                uncollisions++;
+              }
+            },
+            function(newEntity) {
+              entity1 = newEntity;
+            }
+          );
           c.runner.update();
           c.collider.update();
-          c.collider.destroyEntity(c.entities._entities[0]);
+          c.collider.destroyEntity(entity1);
           expect(uncollisions).toEqual(0);
           unmock();
         });
@@ -485,26 +507,33 @@ within("github.com/eric-brechemier/coquette", function() {
         // (this was how the entities got reordered)
 
         var c = new MockCoquette();
-        c.entities.create(Entity, { zindex: 0, id: 0 });
-        c.entities.create(Entity, { zindex: 0, id: 1 });
+        var entity1, entity2;
+        function setEntity1(entity) {
+          entity1 = entity;
+        }
+        function setEntity2(entity) {
+          entity2 = entity;
+        }
+        c.entities.create(Entity, { zindex: 0, id: 0 }, setEntity1);
+        c.entities.create(Entity, { zindex: 0, id: 1 }, setEntity2);
         c.runner.update();
-        expect(c.entities.all()[0].id).toEqual(0);
-        expect(c.entities.all()[1].id).toEqual(1);
+        expect(c.entities.all()[0]).toEqual(entity1);
+        expect(c.entities.all()[1]).toEqual(entity2);
 
         c.entities.all().sort(function(a, b) {
           return (a.zindex || 0) < (b.zindex || 0) ? -1 : 1;
         });
-        expect(c.entities.all()[0].id).toEqual(1);
-        expect(c.entities.all()[1].id).toEqual(0);
+        expect(c.entities.all()[0]).toEqual(entity2);
+        expect(c.entities.all()[1]).toEqual(entity1);
 
         // prove that Entities.create no longer sorts on zindex
 
         c = new MockCoquette();
-        c.entities.create(Entity, { zindex: 1 });
-        c.entities.create(Entity, { zindex: 0 });
+        c.entities.create(Entity, { zindex: 1 }, setEntity1);
+        c.entities.create(Entity, { zindex: 0 }, setEntity2);
         c.runner.update();
-        expect(c.entities.all()[0].zindex).toEqual(1);
-        expect(c.entities.all()[1].zindex).toEqual(0);
+        expect(c.entities.all()[0]).toEqual(entity1);
+        expect(c.entities.all()[1]).toEqual(entity2);
 
         // prove that reordering entities produces the bug
 
@@ -517,8 +546,8 @@ within("github.com/eric-brechemier/coquette", function() {
               initial++;
             }
           }
-        });
-        c.entities.create(Entity);
+        }, setEntity1);
+        c.entities.create(Entity, {}, setEntity2);
 
         c.runner.update();
 
@@ -531,9 +560,10 @@ within("github.com/eric-brechemier/coquette", function() {
         c.collider.update();
         expect(initial).toEqual(1); // collision not re-reported
 
-        var temp = c.entities._entities[0];
-        c.entities._entities[0] = c.entities._entities[1];
-        c.entities._entities[1] = temp; // reorder entities
+        // reorder entities (hack)
+        var list = c.entities.all();
+        list[0] = entity2;
+        list[1] = entity1;
         c.collider.update();
         expect(initial).toEqual(2); // boom
         restoreIsIntersecting();
