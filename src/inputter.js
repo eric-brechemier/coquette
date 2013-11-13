@@ -93,8 +93,8 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     update: function() {
       var keyPressedState = this.space.get('keyPressedState');
       for (var i in keyPressedState) {
-        if (this.keyPressedState[i] === true) { // tick passed and press event in progress
-          this.keyPressedState[i] = false; // end key press
+        if (keyPressedState[i] === true) { // tick passed and press event in progress
+          keyPressedState[i] = false; // end key press
         }
       }
     },
