@@ -87,7 +87,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
     configureCanvasFocus(space);
     configureKeyListeners(space, onKeyDown, onKeyUp);
-  };
+  }
 
   Inputter.prototype = {
     update: function() {
