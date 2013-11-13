@@ -108,8 +108,8 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
   var viewOffset = function(viewCenterPos, viewSize) {
     return {
-      x:viewCenterPos.x - viewSize.x / 2,
-      y:viewCenterPos.y - viewSize.y / 2
+      x: viewCenterPos.x - viewSize.x / 2,
+      y: viewCenterPos.y - viewSize.y / 2
     }
   };
 
