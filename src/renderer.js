@@ -22,8 +22,8 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     configureCanvas(space);
     this.ctx = canvas.getContext('2d');
 
-    this.viewSize = { x:wView, y:hView };
-    this.viewCenterPos = { x: this.viewSize.x / 2, y: this.viewSize.y / 2 };
+    viewSize = this.getViewSize();
+    this.viewCenterPos = { x: viewSize.x / 2, y: viewSize.y / 2 };
   };
 
   Renderer.prototype = {
@@ -36,7 +36,10 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     },
 
     getViewSize: function() {
-      return this.viewSize;
+      return {
+        x: this.space.get("width"),
+        y: this.space.get("height")
+      };
     },
 
     getViewCenterPos: function() {
@@ -53,17 +56,19 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
         game = this.space.get("game"),
         gameEntities = this.space.get("entities").all();
 
-      var viewTranslate = viewOffset(this.viewCenterPos, this.viewSize);
+      var
+        viewSize = this.getViewSize(),
+        viewTranslate = viewOffset(this.viewCenterPos, viewSize);
 
       // translate so all objs placed relative to viewport
       ctx.translate(-viewTranslate.x, -viewTranslate.y);
 
       // draw background
       ctx.fillStyle = this.getBackgroundColor();
-      ctx.fillRect(this.viewCenterPos.x - this.viewSize.x / 2,
-                   this.viewCenterPos.y - this.viewSize.y / 2,
-                   this.viewSize.x,
-                   this.viewSize.y);
+      ctx.fillRect(this.viewCenterPos.x - viewSize.x / 2,
+                   this.viewCenterPos.y - viewSize.y / 2,
+                   viewSize.x,
+                   viewSize.y);
 
       // draw game and entities
       var drawables = [game].concat(gameEntities.concat().sort(zindexSort));
@@ -78,11 +83,12 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     },
 
     onScreen: function(obj) {
+      var viewSize = this.getViewSize();
       return Maths.rectanglesIntersecting(obj, {
-        size: this.viewSize,
+        size: viewSize,
         pos: {
-          x: this.viewCenterPos.x - this.viewSize.x / 2,
-          y: this.viewCenterPos.y - this.viewSize.y / 2
+          x: this.viewCenterPos.x - viewSize.x / 2,
+          y: this.viewCenterPos.y - viewSize.y / 2
         }
       });
     }
