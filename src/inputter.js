@@ -63,22 +63,26 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   }
 
   function Inputter(space) {
+    var
+      keyDownState = {},
+      keyPressedState = {};
+
     this.space = space;
-    this._keyDownState = {};
-    this._keyPressedState = {};
+    space.set("keyDownState", keyDownState);
+    space.set('keyPressedState', keyPressedState)
 
     var self = this;
     function onKeyDown(e) {
-      self._keyDownState[e.keyCode] = true;
-      if (self._keyPressedState[e.keyCode] === undefined) { // start of new keypress
-        self._keyPressedState[e.keyCode] = true; // register keypress in progress
+      keyDownState[e.keyCode] = true;
+      if (keyPressedState[e.keyCode] === undefined) { // start of new keypress
+        keyPressedState[e.keyCode] = true; // register keypress in progress
       }
     }
 
     function onKeyUp(e) {
-      self._keyDownState[e.keyCode] = false;
-      if (self._keyPressedState[e.keyCode] === false) { // prev keypress over
-        self._keyPressedState[e.keyCode] = undefined; // prep for keydown to start next press
+      keyDownState[e.keyCode] = false;
+      if (keyPressedState[e.keyCode] === false) { // prev keypress over
+        keyPressedState[e.keyCode] = undefined; // prep for keydown to start next press
       }
     }
 
@@ -96,11 +100,11 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     },
 
     down: function(keyCode) {
-      return this._keyDownState[keyCode] || false;
+      return this.state.get('keyDownState')[keyCode] || false;
     },
 
     pressed: function(keyCode) {
-      return this._keyPressedState[keyCode] || false;
+      return this.state.get('keyPressedState')[keyCode] || false;
     },
 
     BACKSPACE: 8,
