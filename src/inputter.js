@@ -91,7 +91,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
   Inputter.prototype = {
     update: function() {
-      var keyPressedState = this.state.get('keyPressedState');
+      var keyPressedState = this.space.get('keyPressedState');
       for (var i in keyPressedState) {
         if (this.keyPressedState[i] === true) { // tick passed and press event in progress
           this.keyPressedState[i] = false; // end key press
@@ -100,11 +100,11 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     },
 
     down: function(keyCode) {
-      return this.state.get('keyDownState')[keyCode] || false;
+      return this.space.get('keyDownState')[keyCode] || false;
     },
 
     pressed: function(keyCode) {
-      return this.state.get('keyPressedState')[keyCode] || false;
+      return this.space.get('keyPressedState')[keyCode] || false;
     },
 
     BACKSPACE: 8,
