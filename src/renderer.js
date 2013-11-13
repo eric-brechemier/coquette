@@ -17,12 +17,6 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   }
 
   function Renderer(space) {
-    var
-      game = space.get("game"),
-      canvas = space.get("canvas"),
-      wView = space.get("width"),
-      hView = space.get("height");
-
     this.space = space;
     configureCanvas(space);
     initCanvasContext(space);
