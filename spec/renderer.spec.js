@@ -14,8 +14,8 @@ within("github.com/eric-brechemier/coquette", function() {
 
   var MockCanvas = function() {
     this.style = {};
-    this.ctx = new MockContext();
-    this.getContext = function() { return this.ctx; };
+    var ctx = new MockContext();
+    this.getContext = function() { return ctx; };
   };
 
   var MockCoquette = function() {
