@@ -150,7 +150,7 @@ within("github.com/eric-brechemier/coquette", function() {
         space.set("canvas", new MockCanvas())
         space.set("backgroundColor", "#aaa");
         var r = new Renderer(space);
-        expect(r.backgroundColor).toEqual("#aaa");
+        expect(r.getBackgroundColor()).toEqual("#aaa");
       });
     });
 

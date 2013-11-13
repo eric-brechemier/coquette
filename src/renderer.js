@@ -27,6 +27,10 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
       return this.ctx;
     },
 
+    getBackgroundColor: function() {
+      return this.backgroundColor;
+    },
+
     getViewSize: function() {
       return this.viewSize;
     },
