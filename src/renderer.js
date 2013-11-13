@@ -11,6 +11,11 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     canvas.height = space.get("height");
   }
 
+  function initCanvasContext(space) {
+    var canvas = space.get("canvas");
+    space.set("canvasContext", canvas.getContext('2d'));
+  }
+
   function Renderer(space) {
     var
       game = space.get("game"),
@@ -20,7 +25,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
     this.space = space;
     configureCanvas(space);
-    this.ctx = canvas.getContext('2d');
+    initCanvasContext(space);
 
     viewSize = this.getViewSize();
     this.viewCenterPos = { x: viewSize.x / 2, y: viewSize.y / 2 };
@@ -28,7 +33,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
   Renderer.prototype = {
     getCtx: function() {
-      return this.ctx;
+      return this.space.get("canvasContext");
     },
 
     getBackgroundColor: function() {
