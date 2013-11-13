@@ -1,7 +1,14 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   var Maths = this.Collider.Maths;
 
-  function Renderer(space, game, canvas, wView, hView, backgroundColor) {
+  function Renderer(space) {
+    var
+      game = space.get("game"),
+      canvas = space.get("canvas"),
+      wView = space.get("width"),
+      hView = space.get("height"),
+      backgroundColor = space.get("backgroundColor");
+
     this.space = space;
     this.game = game;
     canvas.style.outline = "none"; // stop browser outlining canvas when it has focus
@@ -86,14 +93,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
   subscribe("create-game", function(space) {
     space(function(){
-      var renderer = new Renderer(
-        space,
-        this.game,
-        this.canvas,
-        this.width,
-        this.height,
-        this.backgroundColor
-      );
+      var renderer = new Renderer(space);
 
       space.subscribe("update-display", function() {
         renderer.update();

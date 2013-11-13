@@ -1,8 +1,8 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
-  function Entities(space, game, entities) {
+  function Entities(space) {
     this.space = space;
-    this.game = game;
-    this._entities = entities === undefined? []: entities;
+    this.game = space.get("game");
+    this._entities = [];
   };
 
   Entities.prototype = {
@@ -60,7 +60,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
   subscribe("create-game", function(space) {
     space(function(){
-      var entities = new Entities(space, this.game);
+      var entities = new Entities(space);
 
       space.subscribe("before-entities-update", function() {
         // TODO: create/destroy entities
