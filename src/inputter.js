@@ -71,7 +71,6 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     space.set("keyDownState", keyDownState);
     space.set('keyPressedState', keyPressedState)
 
-    var self = this;
     function onKeyDown(e) {
       keyDownState[e.keyCode] = true;
       if (keyPressedState[e.keyCode] === undefined) { // start of new keypress
