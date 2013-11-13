@@ -1,4 +1,5 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
+  var interval = 16;
 
   function Ticker(gameLoop) {
     setupRequestAnimationFrame();
