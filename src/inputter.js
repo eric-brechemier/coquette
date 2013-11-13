@@ -14,7 +14,8 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     var inputReceiverElement = window;
     if (autoFocus === false) {
       inputReceiverElement = canvas;
-      inputReceiverElement.contentEditable = true; // lets canvas get focus and get key events
+      // lets canvas get focus and get key events
+      inputReceiverElement.contentEditable = true;
       this.suppressedKeys = [];
     } else {
       this.supressedKeys = [
