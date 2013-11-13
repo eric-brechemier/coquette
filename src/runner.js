@@ -25,7 +25,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
   subscribe("create-game", function(space) {
     space(function(){
-      var runner = new Runner(this);
+      var runner = new Runner(space);
 
       space.subscribe("before-game-update", function(){
         runner.update();

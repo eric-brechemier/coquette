@@ -1,6 +1,6 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
-  function Collider(coquette) {
-    this.coquette = coquette;
+  function Collider(space) {
+    this.space = space;
   };
 
   // if no entities have uncollision(), skip expensive record keeping for uncollisions
@@ -21,7 +21,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     collideRecords: [],
 
     update: function() {
-      var ent = this.coquette.entities.all();
+      var ent = this.space.get("entities").all();
       for (var i = 0, len = ent.length; i < len; i++) {
         for (var j = i + 1; j < len; j++) {
           if (this.isColliding(ent[i], ent[j])) {
@@ -35,7 +35,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
     collision: function(entity1, entity2) {
       var collisionType;
-      if (!isUncollisionOn(this.coquette.entities.all())) {
+      if (!isUncollisionOn(this.space.get("entities").all())) {
         collisionType = this.INITIAL;
       } else if (this.getCollideRecordIds(entity1, entity2).length === 0) {
         this.collideRecords.push([entity1, entity2]);
@@ -275,7 +275,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
   subscribe("create-game", function(space) {
     space(function(){
-      var collider = new Collider(this);
+      var collider = new Collider(space);
 
       space.subscribe("after-entities-update", function() {
         collider.update();

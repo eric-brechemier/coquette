@@ -1,8 +1,8 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   var Maths = this.Collider.Maths;
 
-  function Renderer(coquette, game, canvas, wView, hView, backgroundColor) {
-    this.coquette = coquette;
+  function Renderer(space, game, canvas, wView, hView, backgroundColor) {
+    this.space = space;
     this.game = game;
     canvas.style.outline = "none"; // stop browser outlining canvas when it has focus
     canvas.style.cursor = "default"; // keep pointer normal when hovering over canvas
@@ -49,7 +49,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
       // draw game and entities
       var drawables = [this.game]
-        .concat(this.coquette.entities.all().concat().sort(zindexSort));
+        .concat(this.space.get("entities").all().concat().sort(zindexSort));
       for (var i = 0, len = drawables.length; i < len; i++) {
         if (drawables[i].draw !== undefined) {
           drawables[i].draw(ctx);
@@ -87,7 +87,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   subscribe("create-game", function(space) {
     space(function(){
       var renderer = new Renderer(
-        this,
+        space,
         this.game,
         this.canvas,
         this.width,

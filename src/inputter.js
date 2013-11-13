@@ -1,6 +1,6 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
-  function Inputter(coquette, canvas, autoFocus) {
-    this.coquette = coquette;
+  function Inputter(space, canvas, autoFocus) {
+    this.space = space;
     this._keyDownState = {};
     this._keyPressedState = {};
     var self = this;
@@ -154,7 +154,7 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
   subscribe("create-game", function(space) {
     space(function(){
-      var inputter = new Inputter(this, this.canvas, this.autoFocus);
+      var inputter = new Inputter(space, this.canvas, this.autoFocus);
 
       space.subscribe("after-display-update", function(){
         inputter.update();
