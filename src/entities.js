@@ -4,6 +4,20 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     space.set("gameEntities", []);
   };
 
+  // fire the callback just once, the *next* time the event is published
+  function runOnce(space, event, callback) {
+    var
+      isReady = false,
+      unsubscribe = space.subscribe(event, function() {
+      if ( !isReady ){
+        return; // skip immediate callback when the property is already set
+      }
+      unsubscribe(); // fire only once
+      return callback.apply(this, arguments);
+    });
+    isReady = true;
+  }
+
   Entities.prototype = {
     update: function(interval) {
       var entities = this.all();
@@ -35,7 +49,8 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
         space = this.space,
         game = space.get("game"),
         gameEntities = space.get("gameEntities");
-      space.get("runner").add(this, function(entities) {
+
+      runOnce(space, "create-entities", function(){
         var entity = new clazz(game, settings || {});
         gameEntities.push(entity);
         if (callback !== undefined) {
@@ -48,7 +63,8 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
       var
         space = this.space,
         gameEntities = space.get("gameEntities");
-      space.get("runner").add(this, function(entities) {
+
+      runOnce(space, "destroy-entities", function(){
         for(var i = 0; i < gameEntities.length; i++) {
           if(gameEntities[i] === entity) {
             space.get("collider").destroyEntity(entity);
@@ -68,7 +84,8 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
       var entities = new Entities(space);
 
       space.subscribe("before-entities-update", function() {
-        // TODO: create/destroy entities
+        space.publish("create-entities");
+        space.publish("destroy-entities");
       });
 
       space.subscribe("update-entities", function(interval) {
