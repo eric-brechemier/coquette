@@ -1,7 +1,6 @@
 within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
   function Entities(space) {
     this.space = space;
-    this.game = space.get("game");
     this._entities = [];
   };
 
@@ -31,9 +30,9 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
     },
 
     create: function(clazz, settings, callback) {
-      var self = this;
+      var game = this.space.get("game");
       this.space.get("runner").add(this, function(entities) {
-        var entity = new clazz(self.game, settings || {});
+        var entity = new clazz(game, settings || {});
         entities._entities.push(entity);
         if (callback !== undefined) {
           callback(entity);
