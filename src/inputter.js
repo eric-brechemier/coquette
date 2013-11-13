@@ -91,9 +91,10 @@ within("github.com/eric-brechemier/coquette", function(publish, subscribe) {
 
   Inputter.prototype = {
     update: function() {
-      for (var i in this._keyPressedState) {
-        if (this._keyPressedState[i] === true) { // tick passed and press event in progress
-          this._keyPressedState[i] = false; // end key press
+      var keyPressedState = this.state.get('keyPressedState');
+      for (var i in keyPressedState) {
+        if (this.keyPressedState[i] === true) { // tick passed and press event in progress
+          this.keyPressedState[i] = false; // end key press
         }
       }
     },
